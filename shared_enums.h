@@ -1,0 +1,159 @@
+#pragma once
+#ifndef _SHARED_ENUMS_
+#define _SHARED_ENUMS_
+
+enum UNIT_COLOUR {
+	DEFAULT_COLOUR = -1,
+	RED = 1,
+	GREEN,
+	BLUE,
+	YELLOW,
+	BROWN,
+	ORANGE
+};
+
+enum HERO_CLASS {
+	UNDEFINED_CLASS = -1,
+	MAGE = 1,
+	WARRIOR,
+	MONK,
+	ROGUE
+};
+
+enum UNIT_TYPE {
+	UNDEFINED_TYPE = -1,
+	ROBOT = 1,
+	//HERO,
+	HUMAN,
+	DWARF,
+	GNOME,
+	HALFLING,
+	ELF,
+	OGRE,
+	ORC,
+	GOBLIN
+};
+
+enum MAP_SYMBOL {
+	BLANK	= -1,
+	WALL	= -2,
+	CLOSED_DOOR	= -3,
+	OPENED_DOOR = -4,
+	UNIT = -5
+};
+
+enum LIGHT_MAP_SYMBOL {
+	UNVISIBLE = -1,
+	ALREADY_SEEN,
+	VISIBLE
+};
+
+enum MAP_OBJECT_INDEX {
+	BlankObject	= 127,
+	OgreHead	= 126,
+	Wall_X		= 125,
+	Wall_Z		= 124
+};
+
+enum REQUEST_TYPE {
+	DENIED = -128, // опасно, так-то, но будем надеяться
+	MOVE = 1,
+	CREATE_UNIT,
+	REQ_SHOOT,
+	ANS_SHOOT,
+	OPEN_DOOR,
+	CLOSE_DOOR,
+	OPEN_CHEST,
+	CLOSE_CHEST,
+	CREATE_UNION,
+	END_MESSAGE,
+	BLOCK,
+	UNBLOCK,
+	SET,
+	TURN_END,
+	TURN_BEGIN,
+	NEW_PLAYER,
+	GAME_STARTED,
+	GAME_ENDED,
+	LOGIN,
+	PING,
+	LOAD_MAP,
+	CREATE_LOBBY,
+	DROP_FROM_LOBBY,
+	WANT_TO_DISCONNECT,
+	LOBBY_NEW_PLAYER,
+	REQ_NAME,
+	PLAYER_NAME,
+	JOIN_LOBBY,
+	LOBBY_LIST,
+	PLAYER_LIST,
+	PLAYERS_IN_LOBBY,
+	DROP_PLAYER,
+	DROP_LOBBY,
+	CHANGE_MAP,
+	CHOOSE_MERK,
+	CHANGE_WEAPON,
+	MERK_LIST,
+	CREATE_MERK,
+	DELETE_MERK,
+	EXIT_GAME,
+	PLAYER_IN_GAME
+};
+
+enum SERVER_ANSWER {
+	LOGIN_OK = 1,
+	LOGIN_FAILED,
+	LOGIN_ALREADY
+};
+
+enum PING_ANSWER {
+	PING_HIGH = -1
+};
+
+enum PROPERTY {
+	HP = 1,
+	AP,
+	WEAPON,
+	ARMOR
+};
+
+enum WEAPON {
+	UNDEFINED_WEAPON = -1,
+	WEAPON_NONE = 1,
+	SWORD,
+	BOW,
+	CROSSBOW
+};
+
+enum WEAPON_TYPE {
+	UNDEFINED_WEAPON_TYPE = -1,
+	MELEE = 1,
+	RIFFLE
+};
+
+enum ARMOR {
+	UNDEFINED_ARMOR = -1,
+	ARMOR_NONE = 1,
+	CHAIN_MAIL,
+	CLOAK,
+};
+
+enum ARMOR_TYPE {
+	UNDEFINED_ARMOR_TYPE = -1,
+	SKIN = 1,
+	LIGHT,
+	HEAVY
+};
+
+const float HUMAN_DEFAULT_SCALE = 1.3f;
+const float HUMAN_DEFAULT_SPEED = 85;
+const short DEFAULT_HP = 25;
+const char DEFAULT_AP = 15;
+const char DEFAULT_VIEW_RANGE = 8;
+//const int HERO_SIZE = 13 + sizeof(short);
+//const int UNIT_SIZE = 11 + sizeof(short);
+const int MAX_NICK_LENGTH = 16;
+const int MAX_MERK_COUNT = 5;
+const int MAX_PLAYERS_IN_TEAM = 4;
+
+#endif

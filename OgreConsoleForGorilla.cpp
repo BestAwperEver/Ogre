@@ -1,0 +1,1 @@
+// here was OgreConsoleForGorilla code until I realised template class must have the defining code within its header file
