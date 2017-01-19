@@ -110,8 +110,11 @@ private: // объекты
 	Ogre::String				m_sPluginsCfg;
 	Ogre::String				m_sResourcesCfg;
 	Ogre::RenderWindow*			m_pRenderWindow;
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	Ogre::SceneManager*			m_pSceneManager;
+#endif
 	Ogre::Viewport*				m_pViewport;
+	Ogre::CompositorManager2*	m_pCompositorManager;
 	Ogre::Camera*				m_pCamera;
 
 	//MapObject*					m_pObjectUnderMouseRay;
@@ -205,7 +208,10 @@ private: // инициализация и ввод
 	void chooseSceneManager();
 	void initFactories();
 	void createCamera();
-	void createViewports();
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
+	virtual void createCompositor(void);
+#endif
+	virtual void createViewports(void);
 	void createResourceListener();
 	void loadResources();
 	void createScene();
@@ -605,7 +611,7 @@ private: // клиент вне игры
 	void add_lobby(int host_id, char map_id, int lobby_id);
 	void clear_lobbies() { m_Lobbies.clear(); }
 
-	void add_player(int player_id, const Ogre::String& Nick = Ogre::StringUtil::BLANK, bool log = true);
+	void add_player(int player_id, const Ogre::String& Nick = Ogre::BLANKSTRING, bool log = true);
 	void add_player(int player_id, Ogre::String&& Nick, bool log = true);
 	//void add_player(int player_id);
 	void remove_player(int player_id);

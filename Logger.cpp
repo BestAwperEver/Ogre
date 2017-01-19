@@ -28,7 +28,9 @@ bool Logger::createGameLogFile() {
 		return false;
 	}
 	std::time_t t = time(nullptr);
-	std::tm* aTm = localtime(&t);
+	std::tm npaTm;// = localtime(&t);
+	std::tm* aTm = &npaTm;
+	auto e = localtime_s(aTm, &t);
 	game_log_file << aTm->tm_mday << "." << std::setw(2) << std::setfill('0') << aTm->tm_mon+1
 		<< "." << aTm->tm_year+1900 << std::endl;
 	//	delete aTm;
@@ -48,7 +50,9 @@ void Logger::GameLog(const Ogre::String& msg, bool palki) {
 	game_log_file.open(GameLogFilePath, std::ios_base::app);
 
 	std::time_t t = time(nullptr);
-	std::tm* aTm = localtime(&t);
+	std::tm npaTm;// = localtime(&t);
+	std::tm* aTm = &npaTm;
+	auto e = localtime_s(aTm, &t);
 	game_log_file << std::setw(2) << std::setfill('0') << aTm->tm_hour << ":"
 		<< std::setw(2) << std::setfill('0') << aTm->tm_min <<":"
 		<< std::setw(2) << std::setfill('0') << aTm->tm_sec << ":";
@@ -84,7 +88,9 @@ void Logger::GameLog(Ogre::String&& msg, bool palki) {
 	game_log_file.open(GameLogFilePath, std::ios_base::app);
 
 	std::time_t t = time(nullptr);
-	std::tm* aTm = localtime(&t);
+	std::tm npaTm;// = localtime(&t);
+	std::tm* aTm = &npaTm;
+	auto e = localtime_s(aTm, &t);
 	game_log_file << std::setw(2) << std::setfill('0') << aTm->tm_hour << ":"
 		<< std::setw(2) << std::setfill('0') << aTm->tm_min <<":"
 		<< std::setw(2) << std::setfill('0') << aTm->tm_sec << ":";

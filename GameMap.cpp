@@ -398,8 +398,8 @@ bool GameMap::getPath(CellCoordinates from, CellCoordinates to, std::vector<Cell
 						for ( k = 0; k < n; ++k )                    // прохОдим по всем непомеченным соседям
 							if ( y + dy[k] >= 0 && y + dy[k] < W &&
 								x + dx[k] >= 0 && x + dx[k] < H &&
-								(m_Array[x + dx[k]][y + dy[k]] == MAP_SYMBOL::BLANK ||
-								m_Array[x + dx[k]][y + dy[k]] == MAP_SYMBOL::OPENED_DOOR))
+								(m_Array[x + dx[k]][y + dy[k]] == static_cast<char>(MAP_SYMBOL::BLANK) ||
+								m_Array[x + dx[k]][y + dy[k]] == static_cast<char>(MAP_SYMBOL::OPENED_DOOR)))
 							{	
 								if (k < 4) {
 									stop = false;							// найдены непомеченные клетки
@@ -420,9 +420,9 @@ bool GameMap::getPath(CellCoordinates from, CellCoordinates to, std::vector<Cell
 					if (d > maxPathLength && !stop) {
 						return false;
 					}
-		} while ( !stop && (m_Array(to) == MAP_SYMBOL::BLANK || m_Array(to) == MAP_SYMBOL::OPENED_DOOR) );
+		} while ( !stop && (m_Array(to) == static_cast<char>(MAP_SYMBOL::BLANK) || m_Array(to) == static_cast<char>(MAP_SYMBOL::OPENED_DOOR)) );
 
-		if (m_Array(to) == MAP_SYMBOL::BLANK || m_Array(to) == MAP_SYMBOL::OPENED_DOOR) {
+		if (m_Array(to) == static_cast<char>(MAP_SYMBOL::BLANK) || m_Array(to) == static_cast<char>(MAP_SYMBOL::OPENED_DOOR)) {
 			//m_Array = m_UserMap;
 			return false;  // путь не найден
 		}
@@ -491,8 +491,8 @@ bool GameMap::new_enemy_or_closed_door(CellCoordinates where, FieldOfView& FoV, 
 					FoV(cur_cell.x, cur_cell.y) = 1;
 					if (res == false &&
 						(getUnit(cur_cell) && getUnit(cur_cell)->getPlayerID() != getPlayerID() ||
-						m_Map(cur_cell) == MAP_SYMBOL::CLOSED_DOOR &&
-						m_UserMap(cur_cell) == MAP_SYMBOL::OPENED_DOOR))
+						m_Map(cur_cell) == static_cast<char>(MAP_SYMBOL::CLOSED_DOOR) &&
+						m_UserMap(cur_cell) == static_cast<char>(MAP_SYMBOL::OPENED_DOOR)))
 					{
 						//m_pGameMap->getUnit(cur_cell)->setVisible(true);
 						res = true;
@@ -500,8 +500,8 @@ bool GameMap::new_enemy_or_closed_door(CellCoordinates where, FieldOfView& FoV, 
 				} else if (FoV(cur_cell.x, cur_cell.y)++ == 0) {
 					if (res == false &&
 						(getUnit(cur_cell) && getUnit(cur_cell)->getPlayerID() != getPlayerID() ||
-						m_Map(cur_cell) == MAP_SYMBOL::CLOSED_DOOR &&
-						m_UserMap(cur_cell) == MAP_SYMBOL::OPENED_DOOR))
+						m_Map(cur_cell) == static_cast<char>(MAP_SYMBOL::CLOSED_DOOR) &&
+						m_UserMap(cur_cell) == static_cast<char>(MAP_SYMBOL::OPENED_DOOR)))
 					{
 						//m_pGameMap->getUnit(cur_cell)->setVisible(true);
 						res = true;
@@ -551,10 +551,10 @@ bool GameMap::passable(CellCoordinates cc, bool as_user_sees) const {
 	if (!in_map(cc)) return false;
 
 	if (as_user_sees)
-		return m_UserMap(cc) == MAP_SYMBOL::BLANK || m_UserMap(cc) == MAP_SYMBOL::OPENED_DOOR;
+		return m_UserMap(cc) == static_cast<char>(MAP_SYMBOL::BLANK) || m_UserMap(cc) == static_cast<char>(MAP_SYMBOL::OPENED_DOOR);
 
-	return m_Map(cc) == MAP_SYMBOL::BLANK || m_Map(cc) == MAP_SYMBOL::OPENED_DOOR;
-	//	|| (!units_counted && m_Map(cc) == MAP_SYMBOL::UNIT);
+	return m_Map(cc) == static_cast<char>(MAP_SYMBOL::BLANK) || m_Map(cc) == static_cast<char>(MAP_SYMBOL::OPENED_DOOR);
+	//	|| (!units_counted && m_Map(cc) == static_cast<char>(MAP_SYMBOL::UNIT));
 }
 bool GameMap::passable(char x, char y, bool as_user_sees) const {
 	return passable(CellCoordinates(x, y), as_user_sees);
@@ -564,21 +564,21 @@ bool GameMap::visible(char x, char y) const {
 	assert( m_bInitialized );
 #endif
 	if (!in_map(x, y)) return false;
-	return m_Map(x, y) == MAP_SYMBOL::BLANK || m_Map(x, y) == MAP_SYMBOL::OPENED_DOOR
-		|| m_Map(x, y) == MAP_SYMBOL::UNIT;
+	return m_Map(x, y) == static_cast<char>(MAP_SYMBOL::BLANK) || m_Map(x, y) == static_cast<char>(MAP_SYMBOL::OPENED_DOOR)
+		|| m_Map(x, y) == static_cast<char>(MAP_SYMBOL::UNIT);
 }
 bool GameMap::visible(CellCoordinates cc) const {
 #ifdef _USE_ASSERTS_
 	assert( m_bInitialized );
 #endif
 	if (!in_map(cc)) return false;
-	return m_Map(cc) == MAP_SYMBOL::BLANK || m_Map(cc) == MAP_SYMBOL::OPENED_DOOR
-		|| m_Map(cc) == MAP_SYMBOL::UNIT;
+	return m_Map(cc) == static_cast<char>(MAP_SYMBOL::BLANK) || m_Map(cc) == static_cast<char>(MAP_SYMBOL::OPENED_DOOR)
+		|| m_Map(cc) == static_cast<char>(MAP_SYMBOL::UNIT);
 }
 //bool GameMap::visible(CellCoordinates cc) {
 //	if (!in_map(cc)) return false;
 //	return m_LightMap(cc) > 0;
-//	//	return obj == LIGHT_MAP_SYMBOL::BLANK || obj == LIGHT_MAP_SYMBOL::OPENED_DOOR;
+//	//	return obj == LIGHT_static_cast<char>(MAP_SYMBOL::BLANK) || obj == LIGHT_static_cast<char>(MAP_SYMBOL::OPENED_DOOR);
 //}
 bool GameMap::direct_los_exists(CellCoordinates from, CellCoordinates to) const {
 	char x = from.x;
@@ -669,15 +669,15 @@ bool GameMap::already_seen(CellCoordinates cc) {
 #endif
 	if (!in_map(cc)) return false;
 	return m_LightMap(cc) != -1;
-	//LIGHT_MAP_SYMBOL::INVISIBLE;//== LIGHT_MAP_SYMBOL::ALREADY_SEEN;
-	//	return obj == LIGHT_MAP_SYMBOL::BLANK || obj == LIGHT_MAP_SYMBOL::OPENED_DOOR;
+	//LIGHT_static_cast<char>(MAP_SYMBOL::INVISIBLE);//== LIGHT_static_cast<char>(MAP_SYMBOL::ALREADY_SEEN);
+	//	return obj == LIGHT_static_cast<char>(MAP_SYMBOL::BLANK) || obj == LIGHT_static_cast<char>(MAP_SYMBOL::OPENED_DOOR);
 }
 void GameMap::addUnit(CellCoordinates where, AbstractUnit* unit) {
 #ifdef _USE_ASSERTS_
 	assert( m_bInitialized );
 	assert( in_map(where) );
 #endif
-	m_Map(where) = MAP_SYMBOL::UNIT;
+	m_Map(where) = static_cast<char>(MAP_SYMBOL::UNIT);
 	//m_ServerMap(where) = UNIT;
 	//m_Array(where) = UNIT;
 	m_Units(where) = unit;
@@ -697,7 +697,7 @@ void GameMap::addUnit(CellCoordinates where, AbstractUnit* unit) {
 		//unit->setActive(false);
 	}
 	if (m_LightMap(where) > 0) {
-		m_UserMap(where) = MAP_SYMBOL::UNIT;
+		m_UserMap(where) = static_cast<char>(MAP_SYMBOL::UNIT);
 	}
 
 	++m_UnitInTeamCount[unit->getTeam()];
@@ -707,7 +707,7 @@ void GameMap::removeUnit(CellCoordinates where) {
 #ifdef _USE_ASSERTS_
 	assert( m_bInitialized );
 #endif
-	if (m_Map(where) != UNIT) {
+	if (m_Map(where) != static_cast<char>(MAP_SYMBOL::UNIT)) {
 		return;
 		// на случай, если он уже был удален с карты,
 		// но остался в списке всех юнитов (т.е., например, умер, но моделька еще жива)
@@ -746,7 +746,7 @@ char GameMap::calculate_distance(CellCoordinates from, CellCoordinates to) {
 void GameMap::clear_units() {
 	for (int i = 0; i < m_Map.getHeight(); ++i) 
 		for (int j = 0; j < m_Map.getWidth(); ++i) {
-			if (m_Map[i][j] == MAP_SYMBOL::UNIT) {
+			if (m_Map[i][j] == static_cast<char>(MAP_SYMBOL::UNIT)) {
 				removeUnit(CellCoordinates(i,j));
 			}
 		}

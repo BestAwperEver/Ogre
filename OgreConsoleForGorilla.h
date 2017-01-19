@@ -203,7 +203,7 @@ template<class callbackClass> void OgreConsole<callbackClass>::init (Gorilla::Sc
 
 	mGlyphData = mLayer->_getGlyphData (CONSOLE_FONT_INDEX); // Font.CONSOLE_FONT_INDEX
 
-	mConsoleText = mLayer->createMarkupText (CONSOLE_FONT_INDEX,  10, 10, Ogre::StringUtil::BLANK);
+	mConsoleText = mLayer->createMarkupText (CONSOLE_FONT_INDEX,  10, 10, Ogre::BLANKSTRING);
 	mConsoleText->width (mScreen->getWidth() - 10);
 
 	std::stringstream nulltext;

@@ -273,7 +273,7 @@ void LightMap::ScanOctant(char cell_x, char cell_y, char range,
                 {
 					if (!map.passable(x, y)) //current cell blocked
                     {
-						if (x - 1 >= 0 && map(x - 1, y) == MAP_SYMBOL::BLANK) //prior cell within range AND open...
+						if (x - 1 >= 0 && map(x - 1, y) == static_cast<char>(MAP_SYMBOL::BLANK)) //prior cell within range AND open...
                             //...incremenet the depth, adjust the endslope and recurse
                             ScanOctant(cell_x, cell_y, range,
 								touch_mask, light_map,
@@ -309,7 +309,7 @@ void LightMap::ScanOctant(char cell_x, char cell_y, char range,
                 {
                     if (!map.passable(x, y))
                     {
-                        if (x + 1 < map.getHeight() && map(x + 1, y) == MAP_SYMBOL::BLANK)
+                        if (x + 1 < map.getHeight() && map(x + 1, y) == static_cast<char>(MAP_SYMBOL::BLANK))
                             ScanOctant(cell_x, cell_y, range,
 								touch_mask, light_map,
 								pDepth + 1, pOctant, pStartSlope,
@@ -344,7 +344,7 @@ void LightMap::ScanOctant(char cell_x, char cell_y, char range,
 
                     if (!map.passable(x, y))
                     {
-                        if (y - 1 >= 0 && map(x, y - 1) == MAP_SYMBOL::BLANK)
+                        if (y - 1 >= 0 && map(x, y - 1) == static_cast<char>(MAP_SYMBOL::BLANK))
                             ScanOctant(cell_x, cell_y, range,
 								touch_mask, light_map,
 								pDepth + 1, pOctant, pStartSlope,
@@ -379,7 +379,7 @@ void LightMap::ScanOctant(char cell_x, char cell_y, char range,
 
                     if (!map.passable(x, y))
                     {
-                        if (y + 1 < map.getWidth() && map(x, y + 1) == MAP_SYMBOL::BLANK)
+                        if (y + 1 < map.getWidth() && map(x, y + 1) == static_cast<char>(MAP_SYMBOL::BLANK))
                             ScanOctant(cell_x, cell_y, range,
 								touch_mask, light_map,
 								pDepth + 1, pOctant, pStartSlope,
@@ -413,7 +413,7 @@ void LightMap::ScanOctant(char cell_x, char cell_y, char range,
 
                     if (!map.passable(x, y))
                     {
-                        if (x + 1 < map.getWidth() && map(x + 1, y) == MAP_SYMBOL::BLANK)
+                        if (x + 1 < map.getWidth() && map(x + 1, y) == static_cast<char>(MAP_SYMBOL::BLANK))
                             ScanOctant(cell_x, cell_y, range,
 								touch_mask, light_map,
 								pDepth + 1, pOctant, pStartSlope,
@@ -448,7 +448,7 @@ void LightMap::ScanOctant(char cell_x, char cell_y, char range,
 
                     if (!map.passable(x, y))
                     {
-                        if (x - 1 >= 0 && map(x - 1, y) == MAP_SYMBOL::BLANK)
+                        if (x - 1 >= 0 && map(x - 1, y) == static_cast<char>(MAP_SYMBOL::BLANK))
                             ScanOctant(cell_x, cell_y, range,
 								touch_mask, light_map,
 								pDepth + 1, pOctant, pStartSlope,
@@ -484,7 +484,7 @@ void LightMap::ScanOctant(char cell_x, char cell_y, char range,
 
                     if (!map.passable(x, y))
                     {
-                        if (y + 1 < map.getWidth() && map(x, y + 1) == MAP_SYMBOL::BLANK)
+                        if (y + 1 < map.getWidth() && map(x, y + 1) == static_cast<char>(MAP_SYMBOL::BLANK))
                             ScanOctant(cell_x, cell_y, range,
 								touch_mask, light_map,
 								pDepth + 1, pOctant, pStartSlope,
@@ -519,7 +519,7 @@ void LightMap::ScanOctant(char cell_x, char cell_y, char range,
 
                     if (!map.passable(x, y))
                     {
-                        if (y - 1 >= 0 && map(x, y - 1) == MAP_SYMBOL::BLANK)
+                        if (y - 1 >= 0 && map(x, y - 1) == static_cast<char>(MAP_SYMBOL::BLANK))
                             ScanOctant(cell_x, cell_y, range,
 								touch_mask, light_map,
 								pDepth + 1, pOctant, pStartSlope,
@@ -551,7 +551,7 @@ void LightMap::ScanOctant(char cell_x, char cell_y, char range,
     else if (y >= map.getWidth())
         y = map.getWidth() - 1;
 
-    if (pDepth < range && map(x, y) == MAP_SYMBOL::BLANK) // поменял & на &&
+    if (pDepth < range && map(x, y) == static_cast<char>(MAP_SYMBOL::BLANK)) // поменял & на &&
         ScanOctant(cell_x, cell_y, range,
 			touch_mask, light_map,
 			pDepth + 1, pOctant, pStartSlope, pEndSlope);

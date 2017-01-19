@@ -10,6 +10,7 @@ class FieldOfView: public array2<char> {
 public:
 	FieldOfView(GameMap* pGameMap, char DefaultEl = -1);
 	FieldOfView(GameMap* game_map, char Height, char Width, char DefaultEl = -1);
+	FieldOfView(const FieldOfView&) = default;
 	FieldOfView(FieldOfView&&);
 	void operator = (FieldOfView&&);
 	void decrement(CellCoordinates where, const array2<bool>& LightMask, bool affect_gamemap = true);

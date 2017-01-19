@@ -8,7 +8,7 @@ class DynamicRenderable : public Ogre::SimpleRenderable
 {
 public:
 	/// Constructor
-	DynamicRenderable();
+	DynamicRenderable(Ogre::ObjectMemoryManager*);
 	/// Virtual destructor
 	virtual ~DynamicRenderable();
 

@@ -61,7 +61,7 @@ AbstractUnit::AbstractUnit(const AbstractUnit& R):
 	g_Units.push_front(this);
 	//if (m_pSelectedGroup)
 	//	m_pSelectedGroup->addUnit(this);
-	m_pEntity->setUserAny(Ogre::Any(this));	
+	//m_pEntity->setUserAny(Ogre::Any(this));
 }
 
 AbstractUnit::AbstractUnit(	Ogre::SceneManager *SM,
@@ -126,20 +126,20 @@ AbstractUnit::AbstractUnit(	Ogre::SceneManager *SM,
 	assert( SM );
 #endif
 
-	char buf[4];
-	_itoa_s<4>(g_Units.size(), buf, 16);
-	Ogre::String name = Name + buf;
+	//char buf[4];
+	//_itoa_s<4>(g_Units.size(), buf, 16);
+	//Ogre::String name = Name + buf;
 
 	g_Units.push_front(this);
 
-	m_pEntity = m_pSceneManager->createEntity(name, _DATA.getMesh(ud.type_id));
+	m_pEntity = m_pSceneManager->createEntity(_DATA.getMesh(ud.type_id));
 	m_pEntity->setQueryFlags(ABSTRACT_UNIT_QUERY_FLAG | QueryFlags);
-	m_pEntity->setUserAny(Ogre::Any(this));
+	//m_pEntity->setUserAny(Ogre::Any(this));
 	m_pEntity->setMaterialName(_DATA.getMaterial(ud.type_id));
 	m_pEntity->setVisible(m_bVisible);
 
 	// Create the scene node
-	if (!m_pNode) m_pNode = m_pSceneManager->getRootSceneNode()->createChildSceneNode(name+"Node", StartDestination);
+	if (!m_pNode) m_pNode = m_pSceneManager->getRootSceneNode()->createChildSceneNode(Ogre::SCENE_DYNAMIC, StartDestination);
 	m_pNode->attachObject(m_pEntity);
 
 	m_pNode->setScale(_DATA.getScale(ud.type_id));
@@ -312,19 +312,19 @@ Ogre::Vector3 AbstractUnit::getPosition() const {
 	return m_pNode->getPosition();
 }
 Ogre::int32 AbstractUnit::getRadius() const {
-	Ogre::AxisAlignedBox box = m_pEntity->getWorldBoundingBox();
+	Ogre::Aabb box = m_pEntity->getWorldAabbUpdated();
 	
-	if (!box.isFinite()) return 0;
-
-	return ( box.getMinimum() - box.getMaximum() ).length() / 4;
+	return box.getRadius() / 2;
 }
 
 bool AbstractUnit::intersects(const Ogre::Ray& ray) const {
 	if ( !isVisible() )
 		return false;
-	if ( !m_pEntity->getWorldBoundingBox().isFinite() )
-		return false;
-	return ray.intersects( m_pEntity->getWorldBoundingBox() ).first;
+	//if ( !m_pEntity->getWorldAabb().isFinite() )
+	//	return false;
+	Ogre::Aabb box = m_pEntity->getWorldAabbUpdated();
+	Ogre::AxisAlignedBox old_box(box.getMinimum(), box.getMaximum());
+	return ray.intersects(old_box).first;
 }
 
 void AbstractUnit::setScale(Ogre::Vector3 scale) {
@@ -343,13 +343,15 @@ void AbstractUnit::stop() {
 }
 
 Ogre::Vector3 AbstractUnit::getCenter() const {
-#ifdef _USE_ASSERTS_
-	assert ( m_pEntity->getWorldBoundingBox().isFinite() );
-#endif
-	return m_pEntity->getWorldBoundingBox().getCenter();
+//#ifdef _USE_ASSERTS_
+//	assert ( m_pEntity->getWorldBoundingBox().isFinite() );
+//#endif
+	return m_pEntity->getWorldAabbUpdated().mCenter;
 }
 Ogre::AxisAlignedBox AbstractUnit::getAAB() const {
-	return m_pEntity->getWorldBoundingBox();
+	Ogre::Aabb box = m_pEntity->getWorldAabbUpdated();
+	Ogre::AxisAlignedBox old_box(box.getMinimum(), box.getMaximum());
+	return old_box;
 }
 Ogre::String AbstractUnit::getName() const {
 	return m_sName;//_DATA.getDefaultName(m_Type);
@@ -359,24 +361,26 @@ bool AbstractUnit::iAmForward(const AbstractUnit* r) const {
 	if (!(r->getAAB().isFinite() && getAAB().isFinite())) {
 		return true;
 	}
-	Ogre::Vector3 mycenter = m_pEntity->getWorldBoundingBox().getCenter();
+	Ogre::Vector3 mycenter = m_pEntity->getWorldAabbUpdated().mCenter;
 	Ogre::Vector3 itscenter = r->getAAB().getCenter();
 	Ogre::Vector3 vec = mycenter - itscenter;
 	return (vec + 0.1 * m_v3Direction).length() > vec.length();
 }
 
 Ogre::AxisAlignedBox AbstractUnit::nextBox(Ogre::Real time, bool self) const {
-#ifdef _USE_ASSERTS_
-	assert( m_pEntity->getWorldBoundingBox().isFinite() );
-#endif
+//#ifdef _USE_ASSERTS_
+//	assert( m_pEntity->getWorldBoundingBox().isFinite() );
+//#endif
 	const float scale = 0.4;
 	if (!m_bIsWalking || (m_bPaused && !self)) {
-		Ogre::AxisAlignedBox box = m_pEntity->getWorldBoundingBox();
+		Ogre::Aabb new_box = m_pEntity->getWorldAabbUpdated();
+		Ogre::AxisAlignedBox box(new_box.getMinimum(), new_box.getMaximum());
 		box.scale(Ogre::Vector3(scale, 1, scale));
 		return box;
 	}
 
-	Ogre::AxisAlignedBox box = m_pEntity->getWorldBoundingBox();
+	Ogre::Aabb new_box = m_pEntity->getWorldAabbUpdated();
+	Ogre::AxisAlignedBox box(new_box.getMinimum(), new_box.getMaximum());
 	Ogre::Vector3 mv = box.getMinimum(),
 		Mv = box.getMaximum(),
 		nmv = mv + time * m_v3Direction * m_fWalkSpeed,
@@ -599,7 +603,7 @@ bool AbstractUnit::operator == (const AbstractUnit& r) {
 
 void AbstractUnit::setActive(bool Active) {
 #ifdef _USE_ASSERTS_
-	assert (m_pEntity->getWorldBoundingBox().isFinite() && "Infinite unit bounding box");
+//	assert (m_pEntity->getWorldBoundingBox().isFinite() && "Infinite unit bounding box");
 	assert (m_pDecalPass && "Trying to select unit without decal pass");
 #endif
 	////m_pNode->showBoundingBox(Active);
@@ -669,22 +673,22 @@ void AbstractUnit::setActive(bool Active) {
 }
 
 bool AbstractUnit::setColour(char COLOUR) {
-	if (COLOUR == RED) {
+	if (COLOUR == static_cast<char>(UNIT_COLOUR::RED)) {
 		m_pEntity->setMaterialName("Redbot");
-	} else if (COLOUR == BLUE) {
+	} else if (COLOUR == static_cast<char>(UNIT_COLOUR::BLUE)) {
 		m_pEntity->setMaterialName("Bluebot");
-	} else if (COLOUR == GREEN) {
+	} else if (COLOUR == static_cast<char>(UNIT_COLOUR::GREEN)) {
 		m_pEntity->setMaterialName("Greenbot");
-	} else if (COLOUR == YELLOW) {
+	} else if (COLOUR == static_cast<char>(UNIT_COLOUR::YELLOW)) {
 		m_pEntity->setMaterialName("Yellowbot");
-	} else if (COLOUR == BROWN) {
+	} else if (COLOUR == static_cast<char>(UNIT_COLOUR::BROWN)) {
 		m_pEntity->setMaterialName("Brownbot");
-	} else if (COLOUR == ORANGE) {
+	} else if (COLOUR == static_cast<char>(UNIT_COLOUR::ORANGE)) {
 		m_pEntity->setMaterialName("Orangebot");
 	} else {
 		m_pEntity->setMaterialName("Robot");
 	}
-	return COLOUR != UNIT_COLOUR::DEFAULT_COLOUR;
+	return COLOUR != static_cast<char>(UNIT_COLOUR::DEFAULT_COLOUR);
 }
 void AbstractUnit::setClass(char Class) {
 	m_UnitDef.Class = Class;
@@ -761,7 +765,8 @@ void AbstractUnit::createDecal(Ogre::TexturePtr sourceTexture, Ogre::MaterialPtr
 
 	m_pDecalTexture = manualTexture.getPointer();
 
-	m_pDecalFrustum = new Ogre::Frustum();
+	m_pDecalFrustum = new Ogre::Frustum(Ogre::Id::generateNewId<Ogre::Frustum>(),
+		&m_pSceneManager->_getEntityMemoryManager(Ogre::SCENE_DYNAMIC));
 	m_pDecalFrustum->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
 	m_pDecalFrustum->setOrthoWindowHeight(66.6f);
 	m_pDecalFrustum->setAspectRatio(1.0f);

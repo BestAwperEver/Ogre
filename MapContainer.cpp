@@ -1,6 +1,7 @@
 #include "MapContainer.h"
 
-MapContainer::MapContainer(int Height, int Width): m_Array(Height, Width, BLANK)
+MapContainer::MapContainer(int Height, int Width):
+	m_Array(Height, Width, static_cast<char>(MAP_SYMBOL::BLANK))
 		//m_Height(Height)
 		//, m_Width(Width)
 		//, m_bCleared(false)
@@ -18,7 +19,7 @@ MapContainer::MapContainer(int Height, int Width): m_Array(Height, Width, BLANK)
 }
 
 MapContainer::MapContainer(int Height, int Width, int ObjectCount):
-		m_Array(Height, Width, BLANK)
+		m_Array(Height, Width, static_cast<char>(MAP_SYMBOL::BLANK))
 		//m_Height(Height)
 		//, m_Width(Width)
 		//, m_bCleared(false)
@@ -37,7 +38,7 @@ MapContainer::MapContainer(int Height, int Width, int ObjectCount):
 }
 
 MapContainer::MapContainer(int Height, int Width, const std::vector<MapObjectDef>& Objects):
-		m_Array(Height, Width, BLANK)
+		m_Array(Height, Width, static_cast<char>(MAP_SYMBOL::BLANK))
 		//m_Height(Height)
 		//, m_Width(Width)
 		//, m_bCleared(false)
@@ -56,7 +57,7 @@ MapContainer::MapContainer(int Height, int Width, const std::vector<MapObjectDef
 }
 
 MapContainer::MapContainer(int Height, int Width, std::vector<MapObjectDef>&& Objects):
-		m_Array(Height, Width, BLANK)
+		m_Array(Height, Width, static_cast<char>(MAP_SYMBOL::BLANK))
 		//m_Height(Height)
 		//, m_Width(Width)
 		//, m_bCleared(false)

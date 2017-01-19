@@ -92,10 +92,10 @@ MapObject::~MapObject() {
 		auto Node = m_pEntity->getParentSceneNode();
 		if (Node) {
 			Node->detachObject(m_pEntity);
-			m_pSceneManager->destroySceneNode(Node->getName());
+			m_pSceneManager->destroySceneNode(Node);
 		}
 
-		m_pSceneManager->destroyEntity(m_pEntity->getName());
+		m_pSceneManager->destroyEntity(m_pEntity);
 
 		m_pEntity = 0;
 	}

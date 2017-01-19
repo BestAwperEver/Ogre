@@ -15,8 +15,8 @@ void AbstractFactory::configure(Ogre::SceneManager* SM) {//,
 //	const Ogre::Vector3& scale) {
 #ifdef _USE_ASSERTS_
 	assert( SM );
-//	assert(mesh != Ogre::StringUtil::BLANK);//, "MeshName can't be blank string");
-//	assert(name != Ogre::StringUtil::BLANK);//, "UnitName can't be blank string");
+//	assert(mesh != Ogre::BLANKSTRING);//, "MeshName can't be blank string");
+//	assert(name != Ogre::BLANKSTRING);//, "UnitName can't be blank string");
 //	assert(speed);
 //	assert(scale != Ogre::Vector3::ZERO);//, "Scale can't be zero vector");
 #endif

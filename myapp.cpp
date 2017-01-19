@@ -215,8 +215,11 @@ void assert_me(bool condition, Ogre::String message) {
 }
 
 myapp::myapp(): m_pRoot(0),
-	m_sPluginsCfg(Ogre::StringUtil::BLANK),
-	m_sResourcesCfg(Ogre::StringUtil::BLANK),
+	m_sPluginsCfg(Ogre::BLANKSTRING),
+	m_sResourcesCfg(Ogre::BLANKSTRING),
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
+	m_pCompositorManager(0),
+#endif
 	m_pViewport(0),
 	m_pCamera(0),
 	m_pSceneManager(0),
@@ -400,6 +403,9 @@ bool myapp::setup() {
 	chooseSceneManager();
 	initFactories();
 	createCamera();
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
+	createCompositor();
+#endif
 	createViewports();
 
 	initGorilla();
@@ -531,7 +537,14 @@ void myapp::createRenderSystemListener() {
 	m_pRoot->getRenderSystem()->addListener(this);
 }
 void myapp::chooseSceneManager() {
-	m_pSceneManager = m_pRoot->createSceneManager("DefaultSceneManager"); //Ogre::ST_GENERIC
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
+	const size_t numThreads = std::max<int>(1, Ogre::PlatformInformation::getNumLogicalCores());
+	Ogre::InstancingThreadedCullingMethod threadedCullingMethod = Ogre::INSTANCING_CULLING_SINGLETHREAD;
+	if (numThreads > 1) Ogre::InstancingThreadedCullingMethod threadedCullingMethod = Ogre::INSTANCING_CULLING_THREADED;
+	m_pSceneManager = Ogre::Root::getSingleton().createSceneManager(Ogre::ST_GENERIC, numThreads, threadedCullingMethod);
+#else
+	m_pSceneManager = m_pRoot->createSceneManager(Ogre::ST_GENERIC);
+#endif
 	m_pOverlaySystem = new Ogre::OverlaySystem();
 	m_pSceneManager->addRenderQueueListener(m_pOverlaySystem);
 }
@@ -566,7 +579,7 @@ void myapp::createCamera() {
 	//m_pCamera->lookAt(PLANE_CENTER_X-450,0,PLANE_CENTER_Z+450);
 	setCameraScale(m_fScale);
 
-	m_pCamera->setOrientation(Ogre::Quaternion(.88831, -.253778, .367963, .105117));
+	m_pCamera->setOrientation(Ogre::Quaternion(.88831f, -.253778f, .367963f, .105117f));
 	//(0.886801, -0.259108, 0.367325, 0.107326));
 
 
@@ -596,11 +609,23 @@ void myapp::createCamera() {
 	//											PLANE_CENTER_Z - 800);
 
 }
-void myapp::createViewports() {
-	m_pViewport = m_pRenderWindow->addViewport(m_pCamera);
-	m_pViewport->setBackgroundColour(Ogre::ColourValue(0,0,0));
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
+void myapp::createCompositor(void)
+{
+	//mRoot->initialiseCompositor();
+	m_pCompositorManager = m_pRoot->getCompositorManager2();
+	const Ogre::String workspaceName = "scene workspace";
+	const Ogre::IdString workspaceNameHash = workspaceName;
+	m_pCompositorManager->createBasicWorkspaceDef(workspaceName, Ogre::ColourValue::Black);
+	m_pCompositorManager->addWorkspace(m_pSceneManager, m_pRenderWindow, m_pCamera, workspaceNameHash, true);
+}
+#endif
+void myapp::createViewports(void)
+{
+	m_pViewport = m_pRenderWindow->addViewport();
+//	m_pViewport->setBackgroundColour(Ogre::ColourValue(0, 0, 0));
 
-	m_pCamera->setAspectRatio(Ogre::Real(m_pViewport->getActualWidth()) / Ogre::Real(m_pViewport->getActualHeight()));
+//	m_pCamera->setAspectRatio(Ogre::Real(m_pViewport->getActualWidth()) / Ogre::Real(m_pViewport->getActualHeight()));
 }
 void myapp::createFrameListener() {
 
@@ -732,7 +757,9 @@ void myapp::initGorilla() {
 	m_pGorilla = new Gorilla::Silverback();
 	m_pGorilla->loadAtlas("console","Console");
 	//m_pGorilla->loadAtlas("arial","Fonts");
-	m_pScreen = m_pGorilla->createScreen(m_pViewport, "console");
+	//auto a = m_pRoot->getRenderSystem()->getRenderTargetIterator();
+	m_pScreen = m_pGorilla->createScreen(m_pSceneManager,
+		m_pRoot->getRenderSystem()->getRenderTarget("Ololo"), "console");
 }
 void myapp::initConsole() {
 	m_pConsole = new OgreConsole<myapp>(this, m_pScreen->getWidth() / 6 - 1);
@@ -831,12 +858,11 @@ void myapp::loadStandartObjects() {
 void myapp::constructDynamicMapObject(CellCoordinates Coordinates, MapObject& Obj) {
 	Ogre::MeshPtr mMesh = Ogre::MeshManager::getSingleton().load(Obj.getMesh(), Ogre::ResourceGroupManager::DEFAULT_RESOURCE_GROUP_NAME);
 
-	if (m_pSceneManager->getShadowTechnique() & 16) mMesh->buildEdgeList(); // stencil
+	//if (m_pSceneManager->getShadowTechnique() & 16) mMesh->buildEdgeList(); // stencil
 	//mMesh->buildEdgeList();
 
-	Ogre::Entity* newEnt = m_pSceneManager->createEntity(
-		Obj.getName() + boost::to_string(m_Objects.size()),
-		mMesh);
+	Ogre::Entity* newEnt = m_pSceneManager->createEntity(mMesh);
+
 	//newEnt->setLightMask(0xFFFFFFFF);
 	Obj.setEntity(newEnt);
 	Obj.setScnMgr(m_pSceneManager);
@@ -874,17 +900,18 @@ void myapp::constructStaticMapObject(CellCoordinates Coordinates, MapObject& Obj
 	//if (Obj.getMesh() == "ogrehead.mesh") lodstr = mMesh->getLodStrategy();
 	//else mMesh->setLodStrategy(lodstr);
 
-	Ogre::Entity* newEnt = m_pSceneManager->createEntity(
-		Obj.getName() + boost::to_string(m_Objects.size()),
-		mMesh);
+	// Static geometry code
+	//Ogre::Entity* newEnt = m_pSceneManager->createEntity(
+	//	Obj.getName() + boost::to_string(m_Objects.size()),
+	//	mMesh);
 
-	Obj.setEntity(newEnt);
-	Obj.setScnMgr(m_pSceneManager);
+	//Obj.setEntity(newEnt);
+	//Obj.setScnMgr(m_pSceneManager);
 
-	m_pStaticGeometry->addEntity(newEnt,
-		getCellCenter(Coordinates) + Obj.getShift(),
-		Obj.getOrientation(),
-		Obj.getScale());
+	//m_pStaticGeometry->addEntity(newEnt,
+	//	getCellCenter(Coordinates) + Obj.getShift(),
+	//	Obj.getOrientation(),
+	//	Obj.getScale());
 }
 void myapp::loadMap(char map_id) {
 	if (map_id == m_CurMapID) {
@@ -1011,9 +1038,9 @@ void myapp::unloadMap() {
 		m_pSceneManager->destroyEntity(m_pTransparentGroundEntity);
 		m_pTransparentGroundEntity = 0;
 	}
-	if (m_pSceneManager->hasLight("directionalLight")) {
-		m_pSceneManager->destroyLight("directionalLight");
-	}
+	//if (m_pSceneManager->hasLight("directionalLight")) {
+	//	m_pSceneManager->destroyLight("directionalLight");
+	//}
 	if (m_pGrid) {
 		m_pGrid->setVisible(false);
 		delete m_pGrid;
@@ -1277,10 +1304,10 @@ void myapp::createPlane() {
 			1, 1, true, 1, 1, 1, Ogre::Vector3::UNIT_Z);
 
 	//m_pEntGround = m_pSceneManager->createEntity("GroundEntity", "ground");
-	m_pEntGround = m_pSceneManager->createEntity("GroundEntity", groundMesh);
+	m_pEntGround = m_pSceneManager->createEntity(groundMesh);
 	m_pSceneManager->getRootSceneNode()->createChildSceneNode()->attachObject(m_pEntGround);
 
-	m_pTransparentGroundEntity = m_pSceneManager->createEntity("TransparentGroundEntity", groundMesh);
+	m_pTransparentGroundEntity = m_pSceneManager->createEntity(groundMesh);
 	m_pSceneManager->getRootSceneNode()->createChildSceneNode()->attachObject(m_pTransparentGroundEntity);
 
 	if (m_GroundTexturePtr.isNull()) {
@@ -1343,7 +1370,7 @@ void myapp::createPlane() {
 
 void myapp::createLights() {
 
-	_LOG("Creating lighs...");
+	_LOG("Creating lights...");
 
 	m_pSceneManager->setAmbientLight(Ogre::ColourValue(0.6f, 0.6f, 0.6f));
 
@@ -1367,16 +1394,20 @@ void myapp::createLights() {
 	//l->setDiffuseColour(Ogre::ColourValue(0.1,0.1,0.1));
 	//l->setSpecularColour(Ogre::ColourValue::Blue);
 
-	Ogre::Light* directionalLight = m_pSceneManager->createLight("directionalLight");
+	Ogre::Light* directionalLight = m_pSceneManager->createLight();
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
+	//directionalLight->setStatic(true);
+	m_pSceneManager->getRootSceneNode()->createChildSceneNode()->attachObject(directionalLight);
+#endif
 	directionalLight->setType(Ogre::Light::LT_DIRECTIONAL);
 	//directionalLight->setDiffuseColour(Ogre::ColourValue(0.6f, 0.6f, 0.6f));
 	//directionalLight->setSpecularColour(Ogre::ColourValue(0.4f, 0.4f, 0.4f));
 	directionalLight->setDiffuseColour(Ogre::ColourValue::White);
-	directionalLight->setSpecularColour(Ogre::ColourValue(.9, .9, .9));
-	directionalLight->setDirection(Ogre::Vector3( 0.6, -1.5, -1 ));
+	directionalLight->setSpecularColour(Ogre::ColourValue(.9f, .9f, .9f));
+	directionalLight->setDirection(Ogre::Vector3( 0.6f, -1.5f, -1.0f ));
 
-	m_pSceneManager->setShadowTechnique(Ogre::ShadowTechnique::SHADOWTYPE_TEXTURE_MODULATIVE);
-	m_pSceneManager->setShadowTechnique(Ogre::ShadowTechnique::SHADOWTYPE_TEXTURE_ADDITIVE);
+	//m_pSceneManager->setShadowTechnique(Ogre::ShadowTechnique::SHADOWTYPE_TEXTURE_MODULATIVE);
+	//m_pSceneManager->setShadowTechnique(Ogre::ShadowTechnique::SHADOWTYPE_TEXTURE_ADDITIVE);
 
 	//directionalLight->setDiffuseColour(Ogre::ColourValue::White);
 	//directionalLight->setSpecularColour(Ogre::ColourValue::Blue);
@@ -1414,7 +1445,8 @@ void myapp::createGrid() {
 		return;
 	}
 
-	m_pGrid = new Ogre::ManualObject("Grid1");
+	m_pGrid = new Ogre::ManualObject(Ogre::Id::generateNewId<Ogre::ManualObject>(),
+		&m_pSceneManager->_getEntityMemoryManager(Ogre::SCENE_STATIC));
 	m_pGrid->setCastShadows(false);
 	m_pGrid->estimateVertexCount(m_pGameMap->getHeight() * 2 + m_pGameMap->getWidth() * 2 + 4);
 
@@ -1460,9 +1492,11 @@ void myapp::createGrid() {
 		m_pGrid->end();
 	}
 
-	m_pGrid->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
+	//m_pGrid->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
+	m_pGrid->setCastShadows(false);
+	m_pGrid->setStatic(true);
 
-	m_pSceneManager->getRootSceneNode()->createChildSceneNode()->attachObject(m_pGrid);
+	m_pSceneManager->getRootSceneNode()->createChildSceneNode(Ogre::SCENE_STATIC)->attachObject(m_pGrid);
 
 	//matptr->unload();
 	//	Ogre::MaterialManager::getSingleton().remove("BaseColoured1");
@@ -1534,11 +1568,12 @@ void myapp::createScene() {
 	//												PLANE_CENTER_Z + 800);
 	//	r->setAnimation("Idle");
 
-	m_pPathLine = new DynamicLines(Ogre::RenderOperation::OT_LINE_STRIP);
+	m_pPathLine = new DynamicLines(&m_pSceneManager->_getEntityMemoryManager(Ogre::SCENE_DYNAMIC),
+									Ogre::RenderOperation::OT_LINE_STRIP);
 	m_pPathLine->setMaterial("BaseColoured1");
 	m_pPathLine->setCastShadows(false);
 
-	Ogre::SceneNode *m_pPathLineNode1 = m_pSceneManager->getRootSceneNode()->createChildSceneNode("PathLines");
+	Ogre::SceneNode *m_pPathLineNode1 = m_pSceneManager->getRootSceneNode()->createChildSceneNode();
 	m_pPathLineNode1->attachObject(m_pPathLine);
 
 	//createFog();
@@ -1818,7 +1853,7 @@ void myapp::consoleCreateUnit(Ogre::StringVector& vec) {
 		_LOG("create_unit <unit type_id> <unit PlayerID> <x coord> <y coord>");
 	} else {
 		char type_id = _DATA.getTypeID(vec[1]);
-		if (type_id != UNIT_TYPE::UNDEFINED_TYPE) {
+		if (type_id != static_cast<char>(UNIT_TYPE::UNDEFINED_TYPE)) {
 			unsigned int player_id = Ogre::StringConverter::parseUnsignedInt(vec[2], 48313);
 			if (player_id == 48313) {
 				_LOG("PlayerID should be positive integer value, you idiot");
@@ -1852,7 +1887,7 @@ void myapp::consoleCreateHero(Ogre::StringVector& vec) {
 	} else {
 
 		char type_id = _DATA.getTypeID(vec[3]);
-		if (type_id == UNIT_TYPE::UNDEFINED_TYPE) {
+		if (type_id == static_cast<char>(UNIT_TYPE::UNDEFINED_TYPE)) {
 			_LOG("Invalid type_id");
 			return;
 		}
@@ -1864,13 +1899,13 @@ void myapp::consoleCreateHero(Ogre::StringVector& vec) {
 
 		if (vec.size() > 7) {
 			Weapon = _DATA.getWeaponID(vec[7]);
-			if (Weapon == WEAPON::UNDEFINED_WEAPON) {
+			if (Weapon == static_cast<char>(WEAPON::UNDEFINED_WEAPON)) {
 				_LOG("Incorrect weapon");
 				return;
 			}
 			if (vec.size() > 8) {
 				Armor = _DATA.getArmorID(vec[8]);
-				if (Armor == ARMOR::UNDEFINED_ARMOR) {
+				if (Armor == static_cast<char>(ARMOR::UNDEFINED_ARMOR)) {
 					_LOG("Incorrect armor");
 					return;
 				}
@@ -1909,7 +1944,7 @@ void myapp::consoleCreateHero(Ogre::StringVector& vec) {
 		}
 
 		char Class = _DATA.getClassID(vec[2]);
-		if (Class == HERO_CLASS::UNDEFINED_CLASS) {
+		if (Class == static_cast<char>(HERO_CLASS::UNDEFINED_CLASS)) {
 			_LOG("Invalid class");
 			return;
 		}
@@ -2082,7 +2117,7 @@ void myapp::consoleCreateMerk(Ogre::StringVector& vec) {
 	}
 
 	char type_id = _DATA.getTypeID(vec[2]);
-	if (type_id == UNIT_TYPE::UNDEFINED_TYPE) {
+	if (type_id == static_cast<char>(UNIT_TYPE::UNDEFINED_TYPE)) {
 		_LOG("The type \"" + vec[2] + "\" doesn't exist in game");
 		return;
 	}
@@ -2091,13 +2126,13 @@ void myapp::consoleCreateMerk(Ogre::StringVector& vec) {
 	if (vec.size() == 4) {
 		weapon_id = _DATA.getWeaponID(vec[3]);
 
-		if (weapon_id == WEAPON::UNDEFINED_WEAPON) {
+		if (weapon_id == static_cast<char>(WEAPON::UNDEFINED_WEAPON)) {
 			_LOG("Weapon \"" + vec[3] + "\" doesn't exist in game");
 			return;
 		}
 
 	} else {
-		weapon_id = WEAPON::BOW;
+		weapon_id = static_cast<char>(WEAPON::BOW);
 	}
 
 	req_CreateMerk(type_id, weapon_id, vec[1]);
@@ -2146,7 +2181,7 @@ void myapp::consoleChangeWeapon(Ogre::StringVector& vec) {
 	}
 
 	char weapon_id = _DATA.getWeaponID(vec[1]);
-	if (weapon_id == WEAPON::UNDEFINED_WEAPON) {
+	if (weapon_id == static_cast<char>(WEAPON::UNDEFINED_WEAPON)) {
 		_LOG("Weapon \"" + vec[3] + "\" doesn't exist in game");
 		return;
 	}
@@ -2285,7 +2320,7 @@ myapp::sc_res myapp::start_connection(const std::string& IPv4, unsigned short po
 void myapp::disconnect(void) {
 	_GAMELOG("disconnect");
 	if (connected()) {
-		sendRequest(WANT_TO_DISCONNECT);
+		sendRequest(static_cast<char>(REQUEST_TYPE::WANT_TO_DISCONNECT));
 		if (m_pConnection) m_pConnection->stop();
 	}  else {
 		_LOG("Connection is not estabilished");
@@ -2598,9 +2633,11 @@ bool myapp::mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
 }
 bool myapp::mouseMoved( const OIS::MouseEvent &arg )
 {
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
+	if (m_pTrayManager->injectPointerMove(arg)) return true; //2.0.0
+#else
 	if (m_pTrayManager->injectMouseMove(arg)) return true; //1.9.0
-	//if (m_pTrayManager->injectPointerMove(arg)) return true; //2.0.0
-
+#endif
 	//CEGUI::System::getSingleton().getDefaultGUIContext().injectMouseMove(arg.state.X.rel, arg.state.Y.rel);
 
 	//if (m_pSelectionBox->Selecting()) {
@@ -2649,7 +2686,8 @@ void myapp::set_entity_under_mouse_ray_clear() {
 	Ogre::Ray unit_ray;
 	if (m_pCurPlayer->has_units()) {
 		unit_ray.setOrigin(m_pCamera->getPosition());
-		unit_ray.setDirection(m_pGameMap->getMyFirstUnit()->getEntity()->getWorldBoundingSphere().getCenter()
+		unit_ray.setDirection(
+			m_pGameMap->getMyFirstUnit()->getEntity()->getWorldAabbUpdated().mCenter
 			- m_pCamera->getPosition());
 	}
 	std::vector<CellCoordinates> ccs(8, CellCoordinates());
@@ -2657,7 +2695,14 @@ void myapp::set_entity_under_mouse_ray_clear() {
 
 
 	for (auto it = m_Objects.begin(); it != m_Objects.end(); ++it) {
-		auto box = it->second.getEntity()->getWorldBoundingBox();
+		auto box = it->second.getEntity()->getWorldAabbUpdated();
+
+		// HERE GOES COSTYL
+		Ogre::AxisAlignedBox box2;
+		box2.setMaximum(box.getMaximum());
+		box2.setMinimum(box.getMinimum());
+		// END OF COSTYL
+
 		//if (it->second.getMask().getM() == 1) {
 		//auto sphere = it->second.getEntity()->getWorldBoundingSphere();
 		//sphere.setRadius(sphere.getRadius()*0.3f);
@@ -2674,7 +2719,7 @@ void myapp::set_entity_under_mouse_ray_clear() {
 		////	it->second.setTransparency(0.0f);
 		//}
 		//} else {
-		if (ray.intersects(box).first || unit_ray.intersects(box).first) {
+		if (ray.intersects(box2).first || unit_ray.intersects(box2).first) {
 			//if (abs(cc.x - it->first.x) < 2 && abs(cc.y - it->first.y) < 2) {
 			ccs[k++] = it->first;
 			//}
@@ -2978,100 +3023,100 @@ bool myapp::sendRequest(const std::vector<char>& msg) {
 }
 bool myapp::parseMsg() {
 	int i = 0;
-	while (m_Msg[i] != REQUEST_TYPE::END_MESSAGE) {
+	while (m_Msg[i] != static_cast<char>(REQUEST_TYPE::END_MESSAGE)) {
 		bool res = false;
-		if			(m_Msg[i] == REQUEST_TYPE::DENIED) {
+		if			(m_Msg[i] == static_cast<char>(REQUEST_TYPE::DENIED)) {
 			return hewston_we_have_a_problem();
-		} else if	(m_Msg[i] == REQUEST_TYPE::MOVE) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::MOVE)) {
 			res = true;
 			parse_MoveUnit(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::UNBLOCK) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::UNBLOCK)) {
 			res = true;
 			unblockActivity();
 			++i;
-		} else if	(m_Msg[i] == REQUEST_TYPE::BLOCK) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::BLOCK)) {
 			res = true;
 			blockActivity();
 			++i;
-		} else if	(m_Msg[i] == REQUEST_TYPE::TURN_END) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::TURN_END)) {
 			res = true;
 			parse_TurnEnd(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::TURN_BEGIN) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::TURN_BEGIN)) {
 			res = true;
 			parse_TurnBegin(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::ANS_SHOOT) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::ANS_SHOOT)) {
 			res = true;
 			parse_Shoot(m_Msg, i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::CREATE_UNIT) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::CREATE_UNIT)) {
 			res = true;
 			parse_CreateUnit(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::PLAYER_IN_GAME) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::PLAYER_IN_GAME)) {
 			res = true;
 			parse_PlayerInGame(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::CREATE_UNION) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::CREATE_UNION)) {
 			res = false; // currently a bug
 			//parse_CreateUnion(m_Msg, i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::NEW_PLAYER) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::NEW_PLAYER)) {
 			res = true;
 			parse_NewPlayer(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::SET) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::SET)) {
 			res = true;
 			parse_Set(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::LOGIN) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::LOGIN)) {
 			res = true;
 			parse_Login(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::LOAD_MAP) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::LOAD_MAP)) {
 			res = true;
 			parse_LoadMap(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::CREATE_LOBBY) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::CREATE_LOBBY)) {
 			res = true;
 			parse_CreateLobby(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::DROP_FROM_LOBBY) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::DROP_FROM_LOBBY)) {
 			res = true;
 			parse_DropFromLobby(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::PLAYER_NAME) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::PLAYER_NAME)) {
 			res = true;
 			parse_PlayerName(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::LOBBY_NEW_PLAYER) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::LOBBY_NEW_PLAYER)) {
 			res = true;
 			parse_LobbyNewPlayer(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::JOIN_LOBBY) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::JOIN_LOBBY)) {
 			res = true;
 			parse_JoinLobby(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::PLAYERS_IN_LOBBY) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::PLAYERS_IN_LOBBY)) {
 			res = true;
 			parse_PlayersInLobby(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::PLAYER_LIST) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::PLAYER_LIST)) {
 			res = true;
 			parse_PlayerList(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::LOBBY_LIST) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::LOBBY_LIST)) {
 			res = true;
 			parse_LobbyList(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::DROP_PLAYER) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::DROP_PLAYER)) {
 			res = true;
 			parse_DropPlayer(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::DROP_LOBBY) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::DROP_LOBBY)) {
 			res = true;
 			parse_DropLobby(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::CHANGE_MAP) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::CHANGE_MAP)) {
 			res = true;
 			parse_ChangeMap(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::CREATE_MERK) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::CREATE_MERK)) {
 			res = true;
 			parse_CreateMerk(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::DELETE_MERK) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::DELETE_MERK)) {
 			res = true;
 			parse_DeleteMerk(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::CHOOSE_MERK) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::CHOOSE_MERK)) {
 			res = true;
 			parse_ChooseMerk(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::CHANGE_WEAPON) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::CHANGE_WEAPON)) {
 			res = true;
 			parse_ChangeWeapon(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::MERK_LIST) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::MERK_LIST)) {
 			res = true;
 			parse_MerkList(m_Msg, ++i);
-		} else if	(m_Msg[i] == REQUEST_TYPE::EXIT_GAME) {
+		} else if	(m_Msg[i] == static_cast<char>(REQUEST_TYPE::EXIT_GAME)) {
 			res = true;
 			parse_ExitGame(m_Msg, ++i);
 		}
@@ -3090,7 +3135,7 @@ void myapp::parse_DropFromLobby(const std::vector<char>& msg, int& i) {
 void myapp::parse_Login(const std::vector<char>& msg, int& i) {
 	char ans = msg[i++];
 	switch (ans) {
-	case SERVER_ANSWER::LOGIN_OK: 
+	case static_cast<char>(SERVER_ANSWER::LOGIN_OK): 
 		{
 			int player_id = INT(msg[i]);
 			i += sizeof(int);
@@ -3121,12 +3166,12 @@ void myapp::parse_Login(const std::vector<char>& msg, int& i) {
 			req_LobbyList();
 			//req_MerkList();	// само отсылается сервером
 		} break;
-	case SERVER_ANSWER::LOGIN_FAILED: 
+	case static_cast<char>(SERVER_ANSWER::LOGIN_FAILED): 
 		{
 			_LOG("Incorrect login data");
 			disconnect();	
 		} break;
-	case SERVER_ANSWER::LOGIN_ALREADY: 
+	case static_cast<char>(SERVER_ANSWER::LOGIN_ALREADY): 
 		{
 			_LOG("This account already is in use");
 			disconnect();
@@ -3144,7 +3189,7 @@ void myapp::parse_CreateUnion(const std::vector<char>& msg, int& i) {
 }
 void myapp::parse_CreateUnit(const std::vector<char>& msg, int& i) {
 	//char type_id = msg[i++];
-	//if (type_id == UNIT_TYPE::HERO) {
+	//if (type_id == static_cast<char>(UNIT_TYPE::HERO)) {
 	UnitDef ud = UD(msg[i]);
 	i += sizeof(ud);
 	int len = msg[i++];
@@ -3320,11 +3365,11 @@ void myapp::parse_PlayersInLobby(const std::vector<char>& msg, int& i) {
 }
 void myapp::parse_JoinLobby(const std::vector<char>& msg, int& i) {
 	char ans(msg[i++]);
-	if (ans == SERVER_ANSWER::LOGIN_OK) {
+	if (ans == static_cast<char>(SERVER_ANSWER::LOGIN_OK)) {
 		int lobby_id = INT(msg[i]);
 		i += sizeof(int);
 		do_JoinLobby(lobby_id);
-	} else if (ans == SERVER_ANSWER::LOGIN_FAILED) {
+	} else if (ans == static_cast<char>(SERVER_ANSWER::LOGIN_FAILED)) {
 		_LOG("Failed to join lobby");
 	} else {
 		_LOG("You're already in lobby; exit first");
@@ -3484,7 +3529,7 @@ bool myapp::req_TurnEnd() {
 	blockActivity();
 	//char req = TURN_END;
 	//return sendRequest(Ogre::String(&req,1));
-	return sendRequest(TURN_END);
+	return sendRequest(static_cast<char>(REQUEST_TYPE::TURN_END));
 }
 bool myapp::req_MoveSelectedUnit() {
 	_GAMELOG("req_MoveSelectedUnit");
@@ -3543,7 +3588,7 @@ bool myapp::req_MoveSelectedUnit() {
 	char* req = new char[len];
 	CellCoordinates beg = getCell(m_pActiveUnit->getPosition());
 
-	req[i++] = MOVE;
+	req[i++] = static_cast<char>(REQUEST_TYPE::MOVE);
 	req[i++] = m_Path.size();// < m_pActiveUnit->getAP() ? m_Path.size() : m_pActiveUnit->getAP();
 	req[i++] = beg.x;
 	req[i++] = beg.y;
@@ -3600,7 +3645,7 @@ bool myapp::req_Shoot(AbstractUnit* who_shoot, AbstractUnit* who_get_shooted) {
 
 	//char req[6] = {0};
 	//int i = 0;
-	//req[i++] = REQUEST_TYPE::REQ_SHOOT;
+	//req[i++] = static_cast<char>(REQUEST_TYPE::REQ_SHOOT);
 	//req[i++] = who_shoot->getCoordinates().x;
 	//req[i++] = who_shoot->getCoordinates().y;
 	//req[i++] = who_get_shooted->getCoordinates().x;
@@ -3610,7 +3655,7 @@ bool myapp::req_Shoot(AbstractUnit* who_shoot, AbstractUnit* who_get_shooted) {
 
 	std::vector<char> req(5 * sizeof(char), 0);
 	int i = 0;
-	req[i++] = REQUEST_TYPE::REQ_SHOOT;
+	req[i++] = static_cast<char>(REQUEST_TYPE::REQ_SHOOT);
 	req[i++] = who_shoot->getCoordinates().x;
 	req[i++] = who_shoot->getCoordinates().y;
 	req[i++] = who_get_shooted->getCoordinates().x;
@@ -3638,7 +3683,7 @@ bool myapp::req_CreateUnion(int Team1, int Team2, int Team3, int Team4)
 	int len = 2 + count*sizeof(int);
 	char* req = new char[len];
 	int i = 0;
-	req[i++] = CREATE_UNION;
+	req[i++] = static_cast<char>(REQUEST_TYPE::CREATE_UNION);
 	req[i++] = count;
 	*((int*)(&req[i])) = Team1;
 	i += sizeof(int);
@@ -3675,10 +3720,10 @@ bool myapp::req_CreateUnit(UnitDef ud, CellCoordinates where, CellCoordinates lo
 		return false;
 	}
 
-	if (ud.Weapon == WEAPON::UNDEFINED_WEAPON) {
+	if (ud.Weapon == static_cast<char>(WEAPON::UNDEFINED_WEAPON)) {
 		ud.Weapon = _DATA.getDefaultWeapon(ud.type_id);
 	}
-	if (ud.Weapon == ARMOR::UNDEFINED_ARMOR) {
+	if (ud.Weapon == static_cast<char>(ARMOR::UNDEFINED_ARMOR)) {
 		ud.Weapon = _DATA.getDefaultArmor(ud.type_id);
 	}
 	if (!ud.AP) ud.AP = _DATA.getDefaultAP(ud.type_id);
@@ -3687,7 +3732,7 @@ bool myapp::req_CreateUnit(UnitDef ud, CellCoordinates where, CellCoordinates lo
 	const int N = sizeof(char) + sizeof(UnitDef) + 5*sizeof(char);
 	std::vector<char> req(N, 0);
 	int i = 0;
-	req[i++] = REQUEST_TYPE::CREATE_UNIT;
+	req[i++] = static_cast<char>(REQUEST_TYPE::CREATE_UNIT);
 	//req[i++] = type_id;
 	//req[i++] = Class;
 	//req[i++] = player_id;
@@ -3724,10 +3769,10 @@ bool myapp::req_CreateHero(const Ogre::String& Name, UnitDef ud,
 		return false;
 	}
 
-	if (ud.Weapon == WEAPON::UNDEFINED_WEAPON) {
+	if (ud.Weapon == static_cast<char>(WEAPON::UNDEFINED_WEAPON)) {
 		ud.Weapon = _DATA.getDefaultWeapon(ud.type_id);
 	}
-	if (ud.Weapon == ARMOR::UNDEFINED_ARMOR) {
+	if (ud.Weapon == static_cast<char>(ARMOR::UNDEFINED_ARMOR)) {
 		ud.Weapon = _DATA.getDefaultArmor(ud.type_id);
 	}
 	if (!ud.AP) ud.AP = _DATA.getDefaultAP(ud.type_id);
@@ -3736,8 +3781,8 @@ bool myapp::req_CreateHero(const Ogre::String& Name, UnitDef ud,
 	const int N = sizeof(char) + sizeof(UnitDef) + sizeof(char) + Name.size() + 4*sizeof(char);
 	std::vector<char> req(N, 0);
 	int i = 0;
-	req[i++] = REQUEST_TYPE::CREATE_UNIT;
-	//req[i++] = UNIT_TYPE::HERO;
+	req[i++] = static_cast<char>(REQUEST_TYPE::CREATE_UNIT);
+	//req[i++] = static_cast<char>(UNIT_TYPE::HERO);
 	UD(req[i]) = ud;
 	i += sizeof(ud);
 	req[i++] = Name.size();
@@ -3764,7 +3809,7 @@ bool myapp::req_PlayerName(int player_id) {
 #endif
 	_GAMELOG("req_PlayerName " + boost::lexical_cast<Ogre::String>(player_id));
 	char req[5];
-	*req = REQ_NAME;
+	*req = static_cast<char>(REQUEST_TYPE::REQ_NAME);
 	INT(req[1]) = player_id;
 	return sendRequest(std::vector<char>(req, req+5));
 }
@@ -3776,7 +3821,7 @@ bool myapp::req_DropFromLobby() {
 		_LOG("Already not in lobby");
 		return false;
 	}
-	return sendRequest(DROP_FROM_LOBBY);
+	return sendRequest(static_cast<char>(REQUEST_TYPE::DROP_FROM_LOBBY));
 }
 bool myapp::req_CreateLobby(char map_id) {
 	_GAMELOG("req_CreateLobby");
@@ -3800,7 +3845,7 @@ bool myapp::req_CreateLobby(char map_id) {
 	_LOG("Trying to create lobby with map " + _DATA.getMapName(map_id) + " (id " 
 		+ boost::lexical_cast<Ogre::String>((int)map_id) + ")");
 
-	char req[2] = {CREATE_LOBBY, map_id};
+	char req[2] = { static_cast<char>(REQUEST_TYPE::CREATE_LOBBY), map_id};
 	return sendRequest(std::vector<char>(req,req+2));
 }
 bool myapp::req_JoinLobby(int lobby_id) {
@@ -3822,7 +3867,7 @@ bool myapp::req_JoinLobby(int lobby_id) {
 		+ m_Players[m_Lobbies[lobby_id].get_host_id()].get_nick());
 
 	char req[5];
-	*req = JOIN_LOBBY;
+	*req = static_cast<char>(REQUEST_TYPE::JOIN_LOBBY);
 	INT(req[1]) = lobby_id;
 
 	return sendRequest(std::vector<char>(req, req + 5));
@@ -3842,7 +3887,7 @@ bool myapp::req_StartGame() {
 		return false;
 	}
 
-	return sendRequest(GAME_STARTED);
+	return sendRequest(static_cast<char>(REQUEST_TYPE::GAME_STARTED));
 }
 bool myapp::req_PlayersInLobby(int lobby_id) {
 	_GAMELOG("req_PlayersInLobby");
@@ -3856,17 +3901,17 @@ bool myapp::req_PlayersInLobby(int lobby_id) {
 	}
 	const int N = sizeof(char) + sizeof(int);
 	char req[N];
-	*req = PLAYERS_IN_LOBBY;
+	*req = static_cast<char>(REQUEST_TYPE::PLAYERS_IN_LOBBY);
 	INT(req[1]) = lobby_id;
 	return sendRequest(std::vector<char>(req, req + N));
 }
 bool myapp::req_PlayerList() {
 	_GAMELOG("req_PlayerList");
-	return sendRequest(PLAYER_LIST);
+	return sendRequest(static_cast<char>(REQUEST_TYPE::PLAYER_LIST));
 }
 bool myapp::req_LobbyList() {
 	_GAMELOG("req_LobbyList");
-	return sendRequest(LOBBY_LIST);
+	return sendRequest(static_cast<char>(REQUEST_TYPE::LOBBY_LIST));
 }
 bool myapp::req_ChangeMap(char map_id) {
 	_GAMELOG("req_ChangeMap to " + _DATA.getMapName(map_id)
@@ -3879,7 +3924,7 @@ bool myapp::req_ChangeMap(char map_id) {
 		_LOG("You are not a host of the lobby");
 		return false;
 	}
-	char req[2] = {REQUEST_TYPE::CHANGE_MAP, map_id};
+	char req[2] = {static_cast<char>(REQUEST_TYPE::CHANGE_MAP), map_id};
 	return sendRequest(std::vector<char>(req, req + 2));
 }
 bool myapp::req_CreateMerk(char type_id, char weapon_id, Ogre::String name) {
@@ -3898,7 +3943,7 @@ bool myapp::req_CreateMerk(char type_id, char weapon_id, Ogre::String name) {
 	int N = sizeof(char)*4 + name.size();
 	std::vector<char> req(N, 0);
 	int i = 0;
-	req[i++] = REQUEST_TYPE::CREATE_MERK;
+	req[i++] = static_cast<char>(REQUEST_TYPE::CREATE_MERK);
 	req[i++] = type_id;
 	req[i++] = weapon_id;
 	req[i++] = name.size();
@@ -3924,7 +3969,7 @@ bool myapp::req_DeleteMerk(int merk_id) {
 	}
 
 	std::vector<char> req(sizeof(char) + sizeof(int), 0);
-	req[0] = REQUEST_TYPE::DELETE_MERK;
+	req[0] = static_cast<char>(REQUEST_TYPE::DELETE_MERK);
 	INT(req[1]) = merk_id;
 
 	return sendRequest(std::move( req ));
@@ -3943,7 +3988,7 @@ bool myapp::req_ChooseMerk(int merk_id) {
 	}
 
 	std::vector<char> req(sizeof(char) + sizeof(int), 0);
-	req[0] = REQUEST_TYPE::CHOOSE_MERK;
+	req[0] = static_cast<char>(REQUEST_TYPE::CHOOSE_MERK);
 	INT(req[1]) = merk_id;
 
 	return sendRequest(std::move( req ));
@@ -3963,7 +4008,7 @@ bool myapp::req_ChangeWeapon(int merk_id, char weapon_id) {
 
 	std::vector<char> req(sizeof(char)*2 + sizeof(int), 0);
 	int i = 0;
-	req[i++] = REQUEST_TYPE::CHANGE_WEAPON;
+	req[i++] = static_cast<char>(REQUEST_TYPE::CHANGE_WEAPON);
 	INT(req[i]) = merk_id;
 	i += sizeof(int);
 	req[i++] = weapon_id;
@@ -3971,7 +4016,7 @@ bool myapp::req_ChangeWeapon(int merk_id, char weapon_id) {
 }
 bool myapp::req_MerkList() {
 	_GAMELOG("req_MerkList");
-	return sendRequest(REQUEST_TYPE::MERK_LIST);
+	return sendRequest(static_cast<char>(REQUEST_TYPE::MERK_LIST));
 }
 bool myapp::req_ExitGame() {
 	if (!m_pCurPlayer || !connected()) {
@@ -3986,7 +4031,7 @@ bool myapp::req_ExitGame() {
 		_LOG("You can not leave the battle now");
 		return false;
 	}
-	return sendRequest(EXIT_GAME);
+	return sendRequest(static_cast<char>(REQUEST_TYPE::EXIT_GAME));
 }
 
 void myapp::do_Set(tile unit_coord, char Property, short Value) {
@@ -3999,19 +4044,19 @@ void myapp::do_Set(tile unit_coord, char Property, short Value) {
 		+ _DATA.getPropertyString(Property) + " " + boost::to_string(Value));
 #endif
 	switch (Property) {
-	case PROPERTY::AP:
+	case static_cast<char>(PROPERTY::AP):
 #ifdef _USE_ASSERTS_
 		assert_me( Value >= 0, "Value to set can't be negative");
 #endif
 		unit->setActivePoints(Value);
 		break;
-	case PROPERTY::ARMOR:
+	case static_cast<char>(PROPERTY::ARMOR):
 		unit->setArmor(Value);
 		break;
-	case PROPERTY::HP:
+	case static_cast<char>(PROPERTY::HP):
 		unit->setHitPoints(Value);
 		break;
-	case PROPERTY::WEAPON:
+	case static_cast<char>(PROPERTY::WEAPON):
 		unit->setWeapon(Value);
 		break;
 	default:
@@ -4888,7 +4933,7 @@ bool myapp::drawUnitPath() {
 	}
 
 	m_pPathLine->update();
-	m_pPathLine->getParentNode()->needUpdate();
+	//m_pPathLine->getParentNode()->needUpdate();
 
 	return true;
 }
@@ -5029,8 +5074,9 @@ void myapp::redrawFOV(bool full) {
 		m_pLightMap->estimateVertexCount(4 * 19 * 19 * 2); // числа надо сделать зависящими от радиуса обзора
 		m_pLightMap->estimateIndexCount(8 * 19 * 19 * 2);
 	} else {
-		m_pLightMap = new Ogre::ManualObject("FOV");
-		m_pLightMap->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
+		m_pLightMap = new Ogre::ManualObject(Ogre::Id::generateNewId<Ogre::ManualObject>(),
+			&m_pSceneManager->_getEntityMemoryManager(Ogre::SCENE_DYNAMIC));
+		//m_pLightMap->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
 		m_pLightMap->estimateVertexCount(4 * 19 * 19 * 2);
 		m_pLightMap->estimateIndexCount(8 * 19 * 19 * 2);
 		m_pLightMap->setCastShadows(false);
@@ -5368,7 +5414,7 @@ void myapp::add_player(int player_id, const Ogre::String& Nick, bool log) {
 
 	m_Players[player_id].set_online(true);
 
-	if (Nick == Ogre::StringUtil::BLANK) {
+	if (Nick == Ogre::BLANKSTRING) {
 		if (log) _LOG("Add player with id " + int2str(player_id));
 		req_PlayerName(player_id);
 	} else {

@@ -4,7 +4,8 @@
 
 using namespace Ogre;
 
-DynamicRenderable::DynamicRenderable()
+DynamicRenderable::DynamicRenderable(Ogre::ObjectMemoryManager* mgr):
+	Ogre::SimpleRenderable(Ogre::Id::generateNewId<DynamicRenderable>(), mgr)
 {
 }
 

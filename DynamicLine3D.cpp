@@ -10,7 +10,8 @@ enum {
 	TEXCOORD_BINDING
 };
 
-DynamicLines::DynamicLines (OperationType opType, Ogre::String material)
+DynamicLines::DynamicLines(Ogre::ObjectMemoryManager* mgr, OperationType opType, Ogre::String material)
+	: DynamicRenderable(mgr)
 {
 	initialize (opType, false);
 	setMaterial (material);

@@ -3,6 +3,7 @@
 #define _MERK_H_
 
 #include "../../Database0/Database0/UnitDef.h"
+#include "shared_enums.h"
 
 #ifndef _Ogre_H__
 #include <string>
@@ -29,7 +30,7 @@ public:
 	typedef boost::shared_ptr<Merk> ptr;
 
 	static Merk::ptr create(int player_id, int merk_id,
-		String name, char type_id, char weapon_id = WEAPON::UNDEFINED_WEAPON);
+		String name, char type_id, char weapon_id = static_cast<char>(WEAPON::UNDEFINED_WEAPON));
 	static Merk::ptr create(int merk_id, String name, UnitDef ud);
 
 	UnitDef&	get_ud() { return m_UnitDef; }

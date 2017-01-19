@@ -14,7 +14,8 @@ class DynamicLines : public DynamicRenderable
 
 public:
 	/// Constructor - see setOperationType() for description of argument.
-	DynamicLines (OperationType opType = Ogre::RenderOperation::OT_LINE_STRIP
+	DynamicLines (Ogre::ObjectMemoryManager*,
+		OperationType opType = Ogre::RenderOperation::OT_LINE_STRIP
 		, Ogre::String Material = "BaseWhiteNoLighting");
 	virtual ~DynamicLines();
 

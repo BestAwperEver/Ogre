@@ -2,7 +2,7 @@
 #ifndef _SHARED_ENUMS_
 #define _SHARED_ENUMS_
 
-enum UNIT_COLOUR {
+enum class UNIT_COLOUR : char {
 	DEFAULT_COLOUR = -1,
 	RED = 1,
 	GREEN,
@@ -12,7 +12,7 @@ enum UNIT_COLOUR {
 	ORANGE
 };
 
-enum HERO_CLASS {
+enum class HERO_CLASS : char {
 	UNDEFINED_CLASS = -1,
 	MAGE = 1,
 	WARRIOR,
@@ -20,7 +20,7 @@ enum HERO_CLASS {
 	ROGUE
 };
 
-enum UNIT_TYPE {
+enum class UNIT_TYPE : char {
 	UNDEFINED_TYPE = -1,
 	ROBOT = 1,
 	//HERO,
@@ -34,7 +34,7 @@ enum UNIT_TYPE {
 	GOBLIN
 };
 
-enum MAP_SYMBOL {
+enum class MAP_SYMBOL : char {
 	BLANK	= -1,
 	WALL	= -2,
 	CLOSED_DOOR	= -3,
@@ -42,21 +42,21 @@ enum MAP_SYMBOL {
 	UNIT = -5
 };
 
-enum LIGHT_MAP_SYMBOL {
+enum class LIGHT_MAP_SYMBOL : char {
 	UNVISIBLE = -1,
 	ALREADY_SEEN,
 	VISIBLE
 };
 
-enum MAP_OBJECT_INDEX {
+enum class MAP_OBJECT_INDEX : char {
 	BlankObject	= 127,
 	OgreHead	= 126,
 	Wall_X		= 125,
 	Wall_Z		= 124
 };
 
-enum REQUEST_TYPE {
-	DENIED = -128, // опасно, так-то, но будем надеяться
+enum class REQUEST_TYPE : char {
+	DENIED = -128,
 	MOVE = 1,
 	CREATE_UNIT,
 	REQ_SHOOT,
@@ -100,24 +100,24 @@ enum REQUEST_TYPE {
 	PLAYER_IN_GAME
 };
 
-enum SERVER_ANSWER {
+enum class SERVER_ANSWER : char {
 	LOGIN_OK = 1,
 	LOGIN_FAILED,
 	LOGIN_ALREADY
 };
 
-enum PING_ANSWER {
+enum class PING_ANSWER : char {
 	PING_HIGH = -1
 };
 
-enum PROPERTY {
+enum class PROPERTY : char {
 	HP = 1,
 	AP,
 	WEAPON,
 	ARMOR
 };
 
-enum WEAPON {
+enum class WEAPON : char {
 	UNDEFINED_WEAPON = -1,
 	WEAPON_NONE = 1,
 	SWORD,
@@ -125,20 +125,20 @@ enum WEAPON {
 	CROSSBOW
 };
 
-enum WEAPON_TYPE {
+enum class WEAPON_TYPE : char {
 	UNDEFINED_WEAPON_TYPE = -1,
 	MELEE = 1,
 	RIFFLE
 };
 
-enum ARMOR {
+enum class ARMOR : char {
 	UNDEFINED_ARMOR = -1,
 	ARMOR_NONE = 1,
 	CHAIN_MAIL,
 	CLOAK,
 };
 
-enum ARMOR_TYPE {
+enum class ARMOR_TYPE : char {
 	UNDEFINED_ARMOR_TYPE = -1,
 	SKIN = 1,
 	LIGHT,

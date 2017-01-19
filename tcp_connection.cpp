@@ -278,9 +278,12 @@ void talk_to_svr::on_read(const error_code & err, size_t bytes) {
 
 	check_out_message();
 
-	if (bytes == 3 && *read_buffer_ == PING) on_ping(*((short*)(read_buffer_+1))); else {
+	if (bytes == 3 && *read_buffer_ == static_cast<char>(REQUEST_TYPE::PING)) {
+		on_ping(*((short*)(read_buffer_ + 1)));
+	}
+	else {
 
-		if (read_buffer_[bytes-1] != END_MESSAGE) {
+		if (read_buffer_[bytes-1] != static_cast<char>(REQUEST_TYPE::END_MESSAGE)) {
 			f_log("Message is not ended by END_MESSAGE");
 			server_is_bastard();
 			return;
@@ -391,7 +394,7 @@ void talk_to_svr::ping() {
 	log("ping");
 #endif
 	//char req = PING;
-	write(std::vector<char>(1, PING), true);
+	write(std::vector<char>(1, static_cast<char>(REQUEST_TYPE::PING)), true);
 }
 void talk_to_svr::postpone_ping() {
 	int millis; 
@@ -450,7 +453,7 @@ void talk_to_svr::write(const std::vector<char> & msg, bool ping) {
 		std::vector<char> final_msg(sizeof(short) + msg.size() + sizeof(char), 0);
 		memcpy(&final_msg[0], &size, sizeof(short));
 		memcpy(&final_msg[sizeof(short)], &msg[0], msg.size());
-		final_msg[sizeof(short) + msg.size()] = REQUEST_TYPE::END_MESSAGE;
+		final_msg[sizeof(short) + msg.size()] = static_cast<char>(REQUEST_TYPE::END_MESSAGE);
 
 		//timer_.async_wait( MEM_FN1(do_write, len_str + msg + char(END_MESSAGE)));
 		timer_.async_wait( MEM_FN1(do_write, std::move( final_msg )));
@@ -476,7 +479,7 @@ void talk_to_svr::write(const std::vector<char> & msg, bool ping) {
 }
 void talk_to_svr::login() {
 	std::vector<char> login_msg;
-	login_msg.push_back(LOGIN);
+	login_msg.push_back(static_cast<char>(REQUEST_TYPE::LOGIN));
 	login_msg.push_back(username_.size());
 	login_msg += username_;
 	write(login_msg);

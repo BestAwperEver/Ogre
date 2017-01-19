@@ -34,11 +34,22 @@
 #include <OgreMaterialManager.h>
 #include <OgreTechnique.h>
 //#include <OgreMeshLodGenerator.h>
+#include <OIS.h>
 
-#include <OISEvents.h>
-#include <OISInputManager.h>
-#include <OISKeyboard.h>
-#include <OISMouse.h>
+#if OGRE_VERSION >= ((1 << 16) | (9 << 8) | 0)
+#include <Overlay/OgreOverlaySystem.h>
+	#ifdef _MSC_VER
+		#ifdef _DEBUG
+			#pragma comment(lib, "OgreOverlay_d.lib")
+		#else
+			#pragma comment(lib, "OgreOverlay.lib")
+		#endif
+	#endif
+#endif
+
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
+#include <Compositor/OgreCompositorManager2.h>
+#endif
 
 //#include <CEGUI/CEGUI.h>
 //#include <CEGUI/SchemeManager.h>

@@ -9,15 +9,15 @@ struct MapObjectDef {
 	CellCoordinates objectCoordinates;
 	MAP_OBJECT_INDEX objectIndex;
 
-	MapObjectDef(char posX = -1, char posY = -1, MAP_OBJECT_INDEX _objectIndex = BlankObject):
+	MapObjectDef(char posX = -1, char posY = -1, MAP_OBJECT_INDEX _objectIndex = MAP_OBJECT_INDEX::BlankObject):
 		objectCoordinates(posX, posY), objectIndex(_objectIndex) {}
 	MapObjectDef(CellCoordinates _objectCoordinates, MAP_OBJECT_INDEX _objectIndex):
 		objectCoordinates(_objectCoordinates), objectIndex(_objectIndex) {}
 };
 
-const array2<char> OgreHeadMask = array2<char>(2,2,WALL);
-const array2<char> BlankCellMask = array2<char>(1,1,BLANK);
-const array2<char> WallMask = array2<char>(1,1,WALL);
+const array2<char> OgreHeadMask = array2<char>(2, 2, static_cast<char>(MAP_SYMBOL::WALL));
+const array2<char> BlankCellMask = array2<char>(1, 1, static_cast<char>(MAP_SYMBOL::BLANK));
+const array2<char> WallMask = array2<char>(1, 1, static_cast<char>(MAP_SYMBOL::WALL));
 
 enum Transparentability {
 	Full,
@@ -62,17 +62,18 @@ public:
 	static std::map<MAP_OBJECT_INDEX, MapObject> StandartObjects;
 	//static Ogre::Real def_transp;
 
-	MapObject(MAP_OBJECT_INDEX Index = BlankObject, const array2<char>& Mask = BlankCellMask,
-		const Ogre::String& Mesh = /*Ogre::StringUtil::BLANK*/ Ogre::StringUtil::BLANK, const Ogre::String& Name = Ogre::StringUtil::BLANK,
+	MapObject(MAP_OBJECT_INDEX Index = MAP_OBJECT_INDEX::BlankObject, const array2<char>& Mask = BlankCellMask,
+		const Ogre::String& Mesh = /*Ogre::StringUtil::BLANK*/ Ogre::BLANKSTRING, const Ogre::String& Name = Ogre::BLANKSTRING,
 		const Ogre::Vector3& Scale = Ogre::Vector3(1.0f), const Ogre::Vector3& Shift = Ogre::Vector3(0.0f),
 		Ogre::Quaternion Orientation = Ogre::Quaternion::IDENTITY, bool Dynamic = false, Transparentability TA = None);
 
 	MapObject(MapObject &&MO);
 	MapObject(const MapObject& MO);
+	MapObject& operator = (const MapObject&) = default;
 
 	~MapObject(void);
 
-	int getIndex() const {return m_Index;}
+	MAP_OBJECT_INDEX getIndex() const {return m_Index;}
 	void setIndex(MAP_OBJECT_INDEX i) {m_Index=i;}
 
 	array2<char> getMaskTempObj() const {return m_Mask;}
