@@ -1596,8 +1596,8 @@ void myapp::createScene() {
 	m_pPathLine->setMaterial("BaseColoured1");
 	m_pPathLine->setCastShadows(false);
 
-	Ogre::SceneNode *m_pPathLineNode1 = m_pSceneManager->getRootSceneNode()->createChildSceneNode();
-	m_pPathLineNode1->attachObject(m_pPathLine);
+	m_pPathLineNode = m_pSceneManager->getRootSceneNode()->createChildSceneNode();
+	m_pPathLineNode->attachObject(m_pPathLine);
 
 	//createFog();
 
@@ -5000,7 +5000,7 @@ bool myapp::drawUnitPath() {
 	}
 
 	m_pPathLine->update();
-	//m_pPathLine->getParentNode()->needUpdate();
+	m_pPathLineNode->needUpdate();
 
 	return true;
 }

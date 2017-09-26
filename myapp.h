@@ -10,6 +10,7 @@
 #include "Player.h"
 #include "Lobby.h"
 #include "array2.h"
+#include "PathLine.h"
 
 class SelectionBox;
 class PlayerCamera;
@@ -299,6 +300,7 @@ private: // механика
 
 	// содержит путь текущего юнита к текущей точке
 	std::vector<CellCoordinates>	m_Path;
+	Ogre::SceneNode*				m_pPathLineNode;
 	DynamicLines*					m_pPathLine;
 	Ogre::Real						m_fDefaultRobotScale;
 
