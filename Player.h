@@ -28,7 +28,7 @@ class Player {
 
 public:
 
-	//typedef boost::shared_ptr<Player> ptr;
+	//typedef std::shared_ptr<Player> ptr;
 
 	Player();
 	Player(int ID, Ogre::String Nick);

@@ -8,7 +8,7 @@
 #include "UnitDef.h"
 
 #ifndef _Ogre_H__
-#include "Vector3.h"
+#include "../../Database0/Database0/1/Vector3.h"
 #include <string>
 #endif
 

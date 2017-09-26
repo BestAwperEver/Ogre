@@ -29,7 +29,7 @@ public:
 	//Merk(void);
 	//~Merk(void);
 
-	typedef boost::shared_ptr<Merk> ptr;
+	typedef std::shared_ptr<Merk> ptr;
 
 	static Merk::ptr create(int player_id, int merk_id,
 		String name, char type_id, char weapon_id = static_cast<char>(WEAPON::UNDEFINED_WEAPON));

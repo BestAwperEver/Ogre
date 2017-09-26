@@ -2333,7 +2333,20 @@ myapp::sc_res myapp::start_connection(const std::string& IPv4, unsigned short po
 	if (m_Service.stopped()) {
 		m_Service.reset();
 	}
-	std::thread( std::bind(&myapp::handle_thread, this) );
+
+	//boost::thread( std::bind(&myapp::handle_thread, this) );
+
+	std::thread( std::bind(
+		static_cast<void(myapp::*)()>(&myapp::handle_thread), this) ).detach();
+
+	//std::thread run_thread([&] { m_Service.run(); });
+	//run_thread.detach();
+
+	//std::thread run_thread(
+	//	std::bind(
+	//		static_cast<size_t(boost::asio::io_service::*)()>
+	//		(&boost::asio::io_service::run), std::ref(m_Service)
+	//	));
 
 	do_RemoveAllUnits();
 	do_ClearPlayers();

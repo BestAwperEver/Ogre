@@ -35,7 +35,7 @@ class talk_to_svr : public std::enable_shared_from_this<talk_to_svr> {
 
 public:
 	typedef boost::system::error_code error_code;
-	typedef boost::shared_ptr<talk_to_svr> ptr;
+	typedef std::shared_ptr<talk_to_svr> ptr;
 
 	static ptr start(boost::asio::io_service&
 					, boost::asio::ip::tcp::endpoint
