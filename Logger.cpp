@@ -20,7 +20,8 @@ Logger& Logger::getInstance() {
 }
 
 bool Logger::createGameLogFile() {
-	boost::mutex::scoped_lock lock(m_Mutex);
+	//boost::mutex::scoped_lock lock(m_Mutex);
+	std::unique_lock<std::mutex> lock(m_Mutex);
 
 	game_log_file.open(GameLogFilePath);
 	if (!game_log_file.is_open()) {
@@ -45,7 +46,9 @@ void Logger::GameLog(const Ogre::String& msg, bool palki) {
 	}
 
 
-	boost::mutex::scoped_lock lock(m_Mutex);
+	//std::unique_lock<std::mutex> lock(m_Mutex);
+	//std::unique_lock(m_Mutex);
+	std::unique_lock<std::mutex> lock(m_Mutex);
 
 	game_log_file.open(GameLogFilePath, std::ios_base::app);
 
@@ -83,7 +86,8 @@ void Logger::GameLog(Ogre::String&& msg, bool palki) {
 		return;
 	}
 
-	boost::mutex::scoped_lock lock(m_Mutex);
+	//boost::mutex::scoped_lock lock(m_Mutex);
+	std::unique_lock<std::mutex> lock(m_Mutex);
 
 	game_log_file.open(GameLogFilePath, std::ios_base::app);
 

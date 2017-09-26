@@ -9,9 +9,13 @@ enum {
 	POSITION_BINDING,
 	TEXCOORD_BINDING
 };
-
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 DynamicLines::DynamicLines(Ogre::ObjectMemoryManager* mgr, OperationType opType, Ogre::String material)
 	: DynamicRenderable(mgr)
+#else
+DynamicLines::DynamicLines(OperationType opType, Ogre::String material)
+	: DynamicRenderable()
+#endif
 {
 	initialize (opType, false);
 	setMaterial (material);

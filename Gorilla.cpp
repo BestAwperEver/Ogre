@@ -201,7 +201,7 @@ namespace Gorilla
 #else
 				mTexture = Ogre::TextureManager::getSingletonPtr()->getByName(data, groupName);
 #endif
-				if (mTexture.isNull())
+				if (mTexture == nullptr)
 					mTexture = Ogre::TextureManager::getSingletonPtr()->load(textureName, groupName);
 
 				mInverseTextureSize.x = 1.0f / mTexture->getWidth();
@@ -460,7 +460,7 @@ namespace Gorilla
 	Ogre::MaterialPtr TextureAtlas::createOrGet2DMasterMaterial()
 	{
 		Ogre::MaterialPtr d2Material = Ogre::MaterialManager::getSingletonPtr()->getByName("Gorilla2D");
-		if (d2Material.isNull() == false)
+		if (d2Material != nullptr)
 		{
 			Ogre::Pass* pass = d2Material->getTechnique(0)->getPass(0);
 
@@ -497,7 +497,7 @@ namespace Gorilla
 	Ogre::MaterialPtr TextureAtlas::createOrGet3DMasterMaterial()
 	{
 		Ogre::MaterialPtr d3Material = Ogre::MaterialManager::getSingletonPtr()->getByName("Gorilla3D");
-		if (d3Material.isNull() == false)
+		if (d3Material != nullptr)
 		{
 			Ogre::Pass* pass = d3Material->getTechnique(0)->getPass(0);
 
@@ -538,7 +538,7 @@ namespace Gorilla
 		std::string matName = "Gorilla2D." + mTexture->getName();
 		m2DMaterial = Ogre::MaterialManager::getSingletonPtr()->getByName(matName);
 
-		if (m2DMaterial.isNull())
+		if (m2DMaterial == nullptr)
 			m2DMaterial = createOrGet2DMasterMaterial()->clone(matName);
 
 		m2DPass = m2DMaterial->getTechnique(0)->getPass(0);
@@ -552,7 +552,7 @@ namespace Gorilla
 		std::string matName = "Gorilla3D." + mTexture->getName();
 		m3DMaterial = Ogre::MaterialManager::getSingletonPtr()->getByName(matName);
 
-		if (m3DMaterial.isNull())
+		if (m3DMaterial == nullptr)
 			m3DMaterial = createOrGet3DMasterMaterial()->clone(matName);
 
 		m3DPass = m3DMaterial->getTechnique(0)->getPass(0);
@@ -718,12 +718,15 @@ namespace Gorilla
 		mScreens.push_back(screen);
 		return screen;
 	}
-
+#if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
 	ScreenRenderable* Silverback::createScreenRenderable(Ogre::ObjectMemoryManager* memmgr,
 		const Ogre::Vector2& maxSize, const Ogre::String& atlas_name)
+#else
+	ScreenRenderable* Silverback::createScreenRenderable(const Ogre::Vector2& maxSize, const Ogre::String& atlas_name)
+#endif
 	{
 		TextureAtlas* atlas = (*mAtlases.find(atlas_name)).second;
-		ScreenRenderable* screen = OGRE_NEW ScreenRenderable(memmgr, maxSize, atlas);
+		ScreenRenderable* screen = OGRE_NEW ScreenRenderable(maxSize, atlas);
 		mScreenRenderables.push_back(screen);
 		return screen;
 	}
@@ -850,7 +853,7 @@ namespace Gorilla
 	{
 		OGRE_DELETE mRenderOpPtr->vertexData;
 		mRenderOpPtr->vertexData = 0;
-		mVertexBuffer.setNull();
+		mVertexBuffer = nullptr;
 		mVertexBufferSize = 0;
 	}
 
@@ -1136,14 +1139,15 @@ namespace Gorilla
 
 	}
 
-
-
+#if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
 	ScreenRenderable::ScreenRenderable(Ogre::ObjectMemoryManager* memmgr, const Ogre::Vector2& maxSize, TextureAtlas* atlas)
 		: Ogre::SimpleRenderable(Ogre::Id::generateNewId<Ogre::MovableObject>(), memmgr),
-		LayerContainer(atlas), mMaxSize(maxSize)
+#else
+	ScreenRenderable::ScreenRenderable(const Ogre::Vector2 & maxSize, TextureAtlas* atlas)
+		: LayerContainer(atlas), mMaxSize(maxSize)
+#endif
 	{
 		mRenderOpPtr = &mRenderOp;
-
 		mBox.setInfinite();
 		setMaterial(mAtlas->get3DMaterialName());
 
@@ -1189,9 +1193,13 @@ namespace Gorilla
 		}
 
 		Ogre::SceneNode* node = getParentSceneNode();
+#if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
 		if (node && node->isStatic())
-			//node->_updateBounds();
 			node->_notifyStaticDirty();
+#else
+		if (node)
+			node->_updateBounds();
+#endif
 	}
 
 	void ScreenRenderable::_transform(buffer<Vertex>& vertices, size_t begin, size_t end)

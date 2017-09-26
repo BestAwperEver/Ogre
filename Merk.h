@@ -2,14 +2,15 @@
 #ifndef _MERK_H_
 #define _MERK_H_
 
-#include "../../Database0/Database0/UnitDef.h"
+#include "DataBase.h"
+//#include "../../Database0/Database0/UnitDef.h"
 #include "shared_enums.h"
 
 #ifndef _Ogre_H__
 #include <string>
 #endif
 
-class Merk: public boost::enable_shared_from_this<Merk>, public boost::noncopyable
+class Merk: public std::enable_shared_from_this<Merk>
 {
 #ifdef _Ogre_H__
 	typedef Ogre::String String;
@@ -22,6 +23,7 @@ class Merk: public boost::enable_shared_from_this<Merk>, public boost::noncopyab
 	UnitDef m_UnitDef;
 
 	Merk(int merk_id, String name, UnitDef ud);
+	Merk(const Merk&) = delete;
 
 public:
 	//Merk(void);

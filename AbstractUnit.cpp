@@ -133,13 +133,17 @@ AbstractUnit::AbstractUnit(	Ogre::SceneManager *SM,
 	g_Units.push_front(this);
 
 	m_pEntity = m_pSceneManager->createEntity(_DATA.getMesh(ud.type_id));
-	m_pEntity->setQueryFlags(ABSTRACT_UNIT_QUERY_FLAG | QueryFlags);
+	//m_pEntity->setQueryFlags(ABSTRACT_UNIT_QUERY_FLAG | QueryFlags);
 	//m_pEntity->setUserAny(Ogre::Any(this));
 	m_pEntity->setMaterialName(_DATA.getMaterial(ud.type_id));
 	m_pEntity->setVisible(m_bVisible);
 
 	// Create the scene node
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	if (!m_pNode) m_pNode = m_pSceneManager->getRootSceneNode()->createChildSceneNode(Ogre::SCENE_DYNAMIC, StartDestination);
+#else
+	if (!m_pNode) m_pNode = m_pSceneManager->getRootSceneNode()->createChildSceneNode(StartDestination);
+#endif
 	m_pNode->attachObject(m_pEntity);
 
 	m_pNode->setScale(_DATA.getScale(ud.type_id));
@@ -312,7 +316,11 @@ Ogre::Vector3 AbstractUnit::getPosition() const {
 	return m_pNode->getPosition();
 }
 Ogre::int32 AbstractUnit::getRadius() const {
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	Ogre::Aabb box = m_pEntity->getWorldAabbUpdated();
+#else
+	Ogre::Sphere box = m_pEntity->getWorldBoundingSphere();
+#endif
 	
 	return box.getRadius() / 2;
 }
@@ -322,9 +330,7 @@ bool AbstractUnit::intersects(const Ogre::Ray& ray) const {
 		return false;
 	//if ( !m_pEntity->getWorldAabb().isFinite() )
 	//	return false;
-	Ogre::Aabb box = m_pEntity->getWorldAabbUpdated();
-	Ogre::AxisAlignedBox old_box(box.getMinimum(), box.getMaximum());
-	return ray.intersects(old_box).first;
+	return ray.intersects(getAAB()).first;
 }
 
 void AbstractUnit::setScale(Ogre::Vector3 scale) {
@@ -346,12 +352,20 @@ Ogre::Vector3 AbstractUnit::getCenter() const {
 //#ifdef _USE_ASSERTS_
 //	assert ( m_pEntity->getWorldBoundingBox().isFinite() );
 //#endif
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	return m_pEntity->getWorldAabbUpdated().mCenter;
+#else
+	return m_pEntity->getWorldBoundingBox().getCenter();
+#endif
 }
 Ogre::AxisAlignedBox AbstractUnit::getAAB() const {
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	Ogre::Aabb box = m_pEntity->getWorldAabbUpdated();
 	Ogre::AxisAlignedBox old_box(box.getMinimum(), box.getMaximum());
 	return old_box;
+#else
+	return m_pEntity->getWorldBoundingBox();
+#endif
 }
 Ogre::String AbstractUnit::getName() const {
 	return m_sName;//_DATA.getDefaultName(m_Type);
@@ -361,7 +375,7 @@ bool AbstractUnit::iAmForward(const AbstractUnit* r) const {
 	if (!(r->getAAB().isFinite() && getAAB().isFinite())) {
 		return true;
 	}
-	Ogre::Vector3 mycenter = m_pEntity->getWorldAabbUpdated().mCenter;
+	Ogre::Vector3 mycenter = getAAB().getCenter();
 	Ogre::Vector3 itscenter = r->getAAB().getCenter();
 	Ogre::Vector3 vec = mycenter - itscenter;
 	return (vec + 0.1 * m_v3Direction).length() > vec.length();
@@ -373,14 +387,22 @@ Ogre::AxisAlignedBox AbstractUnit::nextBox(Ogre::Real time, bool self) const {
 //#endif
 	const float scale = 0.4;
 	if (!m_bIsWalking || (m_bPaused && !self)) {
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 		Ogre::Aabb new_box = m_pEntity->getWorldAabbUpdated();
 		Ogre::AxisAlignedBox box(new_box.getMinimum(), new_box.getMaximum());
+#else
+		Ogre::AxisAlignedBox box(getAAB());
+#endif
 		box.scale(Ogre::Vector3(scale, 1, scale));
 		return box;
 	}
 
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	Ogre::Aabb new_box = m_pEntity->getWorldAabbUpdated();
 	Ogre::AxisAlignedBox box(new_box.getMinimum(), new_box.getMaximum());
+#else
+	Ogre::AxisAlignedBox box(getAAB());
+#endif
 	Ogre::Vector3 mv = box.getMinimum(),
 		Mv = box.getMaximum(),
 		nmv = mv + time * m_v3Direction * m_fWalkSpeed,
@@ -763,12 +785,15 @@ void AbstractUnit::createDecal(Ogre::TexturePtr sourceTexture, Ogre::MaterialPtr
 	pixelBuffer->unlock();
 	sourcePixelBuffer->unlock();
 
-	m_pDecalTexture = manualTexture.getPointer();
-
+	m_pDecalTexture = manualTexture.get();
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	m_pDecalFrustum = new Ogre::Frustum(Ogre::Id::generateNewId<Ogre::Frustum>(),
 		&m_pSceneManager->_getEntityMemoryManager(Ogre::SCENE_DYNAMIC));
+#else
+	m_pDecalFrustum = new Ogre::Frustum();
+#endif
 	m_pDecalFrustum->setProjectionType(Ogre::PT_ORTHOGRAPHIC);
-	m_pDecalFrustum->setOrthoWindowHeight(66.6f);
+	m_pDecalFrustum->setOrthoWindowHeight(66.6f); // some hardcoded value?
 	m_pDecalFrustum->setAspectRatio(1.0f);
 
 	auto projectorNode = m_pNode->createChildSceneNode();

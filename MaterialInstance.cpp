@@ -3,7 +3,8 @@
 MaterialInstance::MaterialInstance () {
 	mCurrentTransparency = 0.0f;
 
-	mCopyMat.setNull ();
+	//mCopyMat.setNull ();
+	mCopyMat == nullptr;
 
 	mSBT = SBT_TRANSPARENT_ALPHA;
 }
@@ -15,7 +16,7 @@ MaterialInstance::~MaterialInstance () {
 void MaterialInstance::setSceneBlending (SceneBlendType sbt) {
 	mSBT = sbt;
 
-	if (!mCopyMat.isNull ()) {
+	if (mCopyMat != nullptr) {
 		Material::TechniqueIterator techniqueIt = mCopyMat->getTechniqueIterator ();
 		while (techniqueIt.hasMoreElements ()) {
 			Technique *t = techniqueIt.getNext ();
@@ -33,7 +34,7 @@ void MaterialInstance::setTransparency (Real transparency) {
 		if (mCurrentTransparency > 1.0f)
 			mCurrentTransparency = 1.0f;
 
-		if (mCopyMat.isNull ()) {
+		if (mCopyMat == nullptr) {
 			createCopyMaterial ();
 		}
 
@@ -85,7 +86,7 @@ void MaterialInstance::createCopyMaterial () {
 	// Avoid name collision
 	do {
 		name = mOriginalMat->getName () + StringConverter::toString (Math::UnitRandom ());
-	} while (MaterialManager::getSingleton ().resourceExists (name));
+	} while (MaterialManager::getSingleton().resourceExists(name, MATERIAL_GROUP_NAME));
 
 	mCopyMat = mOriginalMat->clone (name);
 
@@ -102,8 +103,8 @@ void MaterialInstance::createCopyMaterial () {
 }
 
 void MaterialInstance::clearCopyMaterial () {
-	if (!mCopyMat.isNull ())
-		MaterialManager::getSingleton ().remove (mCopyMat->getName ());
+	if (mCopyMat != nullptr)
+		MaterialManager::getSingleton ().remove (mCopyMat->getName (), MATERIAL_GROUP_NAME);
 
-	mCopyMat.setNull ();
+	mCopyMat = nullptr;
 }

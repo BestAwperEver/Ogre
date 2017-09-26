@@ -78,7 +78,7 @@ void AbstractFactory::removeUnit(AbstractUnit* u) {
 }
 void AbstractFactory::removeAllUnits() {
 	for (auto it = m_Units.begin(); it != m_Units.end(); ++it)
-		AbstractUnit::g_Units.remove(it->getPointer());
+		AbstractUnit::g_Units.remove(it->get());
 	m_Units.clear();
 }
 

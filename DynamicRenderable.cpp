@@ -3,9 +3,12 @@
 #include <OgreHardwareBufferManager.h>
 
 using namespace Ogre;
-
+#if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
 DynamicRenderable::DynamicRenderable(Ogre::ObjectMemoryManager* mgr):
 	Ogre::SimpleRenderable(Ogre::Id::generateNewId<DynamicRenderable>(), mgr)
+#else
+DynamicRenderable::DynamicRenderable()
+#endif
 {
 }
 

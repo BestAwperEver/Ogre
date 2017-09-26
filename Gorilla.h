@@ -443,8 +443,11 @@ namespace Gorilla
 
 		/*! function. createScreenRenderable
 		*/
+#if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
 		ScreenRenderable* createScreenRenderable(Ogre::ObjectMemoryManager*, const Ogre::Vector2& maxSize, const Ogre::String& atlas);
-
+#else
+		ScreenRenderable* createScreenRenderable(const Ogre::Vector2& maxSize, const Ogre::String& atlas);
+#endif
 		/*! function. destroyScreen
 			desc.
 				Destroy an existing screen, its layers and the contents of those layers.
@@ -972,9 +975,11 @@ namespace Gorilla
 	{
 
 	public:
-
+#if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
 		ScreenRenderable(Ogre::ObjectMemoryManager*, const Ogre::Vector2& maxSize, TextureAtlas*);
-
+#else
+		ScreenRenderable(const Ogre::Vector2& maxSize, TextureAtlas*);
+#endif
 		~ScreenRenderable();
 
 		void frameStarted();

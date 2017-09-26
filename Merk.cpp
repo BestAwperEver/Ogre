@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "Merk.h"
-#include "../../Database0/Database0/DataBase.h"
+//#include "../../Database0/Database0/DataBase.h"
 
 Merk::Merk(int merk_id, String name, UnitDef ud)
 	: m_MerkID(merk_id)

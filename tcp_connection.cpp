@@ -61,14 +61,14 @@ void talk_to_svr::start(ip::tcp::endpoint ep, const std::string & username) {
 	log("start");
 #endif
 	//_GAMELOG("Trying to connect to the server");
-	f_log("Trying to connect to " + ep.address().to_string() + ":" + boost::to_string(ep.port()));
-	//_LOG("Trying to connect to " + ep.address().to_string() + ":" + boost::to_string(ep.port()));
+	f_log("Trying to connect to " + ep.address().to_string() + ":" + std::to_string(ep.port()));
+	//_LOG("Trying to connect to " + ep.address().to_string() + ":" + std::to_string(ep.port()));
 
 	username_ = username;
 	m_bStarted = true;
 	m_timer.expires_from_now( boost::posix_time::seconds(10));
-	m_timer.async_wait( MEM_FN2( handle_timer, "connection failed", _1));
-	sock_.async_connect(ep, MEM_FN1(on_connect,_1));
+	m_timer.async_wait( MEM_FN2( handle_timer, "connection failed", std::placeholders::_1));
+	sock_.async_connect(ep, MEM_FN1(on_connect, std::placeholders::_1));
 }
 void talk_to_svr::stop() {
 	if ( !m_bStarted ) {
@@ -149,7 +149,7 @@ void talk_to_svr::log(const std::string& msg, const boost::system::error_code& e
 	out << "Connection: " << msg << ' ' << error;// << std::endl;
 	//console->print(out.str());
 	{
-		boost::mutex::scoped_lock lk(m_Mutex);
+		std::unique_lock<std::mutex> lk(m_Mutex);
 #ifdef ENABLE_CONSOLE_NET_LOG
 		_LOG(out.str());
 #else
@@ -171,7 +171,7 @@ void talk_to_svr::log(const std::string& msg, bool is_important) {
 		//out << msg << " (" << username_ << ")" << std::endl;
 		//console->print(msg);
 		{
-			boost::mutex::scoped_lock lk(m_Mutex);
+			std::unique_lock<std::mutex> lk(m_Mutex);
 #ifdef ENABLE_CONSOLE_NET_LOG
 			_LOG("Connection: " + msg);
 #else
@@ -184,7 +184,7 @@ void talk_to_svr::log(const std::string& msg, bool is_important) {
 }
 void talk_to_svr::f_log(const std::string& msg) {
 	//Ogre::LogManager::getSingletonPtr()->logMessage(msg);
-	boost::mutex::scoped_lock lk(m_Mutex);
+	std::unique_lock<std::mutex> lk(m_Mutex);
 	_LOG("Connection: " + msg);
 }
 
@@ -248,7 +248,7 @@ void talk_to_svr::on_read_size(const error_code & err) {
 		return;
 	}
 	if (*((short*)read_buffer_) > max_in_msg) {
-		f_log("too big message size: " + boost::to_string(*((short*)read_buffer_)));
+		f_log("too big message size: " + std::to_string(*((short*)read_buffer_)));
 		server_is_bastard();
 		return;
 	}
@@ -324,7 +324,7 @@ void talk_to_svr::on_read(const error_code & err, size_t bytes) {
 //}
 void talk_to_svr::on_ping(short ping) {//std::vector<char>& msg) {
 #ifdef ENABLE_NET_LOG
-	log("on_ping " + boost::to_string(ping));
+	log("on_ping " + std::to_string(ping));
 #endif
 	//msg.back() = ' ';
 	//std::istringstream in(msg);
@@ -369,7 +369,7 @@ void talk_to_svr::add_incoming_message(std::vector<char>& msg) {
 #ifdef ENABLE_NET_LOG
 	log("New message from server");
 #endif
-	boost::mutex::scoped_lock lk(m_Mutex);
+	std::unique_lock<std::mutex> lk(m_Mutex);
 	m_IncomingMsgs.push_back( std::move(msg) );
 	//check_out_message();
 }
@@ -377,7 +377,7 @@ void talk_to_svr::check_out_message() {
 #ifdef ENABLE_NET_LOG
 	log("check_out_message");
 #endif
-	boost::mutex::scoped_lock lk(m_Mutex);
+	std::unique_lock<std::mutex> lk(m_Mutex);
 	if (!m_OutcomingMsgs.empty()) {
 		write(m_OutcomingMsgs.front());
 		m_OutcomingMsgs.pop_front();
@@ -486,11 +486,11 @@ void talk_to_svr::login() {
 }
 
 void talk_to_svr::do_delete_incoming_msg() {
-	boost::mutex::scoped_lock lk(m_Mutex);
+	std::unique_lock<std::mutex> lk(m_Mutex);
 	m_IncomingMsgs.pop_front();
 }
 void talk_to_svr::do_add_outcoming_msg(const std::vector<char>& msg) {
-	boost::mutex::scoped_lock lk(m_Mutex);
+	std::unique_lock<std::mutex> lk(m_Mutex);
 	m_OutcomingMsgs.push_back(msg);
 }
 //void talk_to_svr::do_ask_clients() {
@@ -518,14 +518,16 @@ void talk_to_svr::do_read(bool only_size) {
 #endif
 		async_read(sock_, buffer(read_buffer_), 
 			//MEM_FN2(read_complete,_1,_2), MEM_FN2(on_read,_1,_2));
-			transfer_exactly(sizeof(short)), MEM_FN1(on_read_size, _1));
+			transfer_exactly(sizeof(short)),
+			MEM_FN1(on_read_size, std::placeholders::_1));
 	} else {
 #ifdef CHECK_PING
 		m_timer.expires_from_now( boost::posix_time::seconds(5) );
 		m_timer.async_wait( MEM_FN2( handle_timer, "Server is not responding", _1 ));
 #endif
 		async_read(sock_, buffer(read_buffer_), 
-			transfer_exactly(*((short*)(read_buffer_))), MEM_FN2(on_read,_1,_2));
+			transfer_exactly(*((short*)(read_buffer_))),
+			MEM_FN2(on_read, std::placeholders::_1, std::placeholders::_2));
 	}
 	//m_timer.expires_from_now( boost::posix_time::seconds(MAX_SERVER_RESPONDONG_TIME) );
 	//m_timer.async_wait( MEM_FN2( handle_timer, "Server is not responding", _1 ));
@@ -540,7 +542,8 @@ void talk_to_svr::do_write(const std::vector<char> & msg) {
 	m_bIsWriting = true;
 	//sock_.async_write_some( buffer(write_buffer_, msg.size()), 
 	//	MEM_FN2(on_write,_1,_2));
-	async_write(sock_, buffer(write_buffer_, msg.size()), transfer_exactly(msg.size()), MEM_FN2(on_write,_1,_2));
+	async_write(sock_, buffer(write_buffer_, msg.size()),
+		transfer_exactly(msg.size()), MEM_FN2(on_write, std::placeholders::_1, std::placeholders::_2));
 }
 
 size_t talk_to_svr::read_complete(const boost::system::error_code & err, size_t bytes) {

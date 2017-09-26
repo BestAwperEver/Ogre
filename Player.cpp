@@ -1,7 +1,8 @@
 #include "Player.h"
 #include "tcp_connection.h"
 #include "Logger.h"
-#include "..\..\Database0\Database0\DataBase.h"
+#include "DataBase.h"
+//#include "..\..\Database0\Database0\DataBase.h"
 #include <boost\lexical_cast.hpp>
 
 Player::Player(int ID, Ogre::String Nick):

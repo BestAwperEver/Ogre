@@ -5,9 +5,9 @@
 //#define CHECK_PING
 #define EMULATE_PING
 
-#define MEM_FN(x)       boost::bind(&self_type::x, shared_from_this())
-#define MEM_FN1(x,y)    boost::bind(&self_type::x, shared_from_this(),y)
-#define MEM_FN2(x,y,z)  boost::bind(&self_type::x, shared_from_this(),y,z)
+#define MEM_FN(x)       std::bind(&self_type::x, shared_from_this())
+#define MEM_FN1(x,y)    std::bind(&self_type::x, shared_from_this(),y)
+#define MEM_FN2(x,y,z)  std::bind(&self_type::x, shared_from_this(),y,z)
 
 #define ONLY_IMPORTANT_MESSAGES_TO_LOG true
 #define ENABLE_NET_LOG
@@ -20,11 +20,12 @@
 
 class myapp;
 
-class talk_to_svr : public boost::enable_shared_from_this<talk_to_svr>, boost::noncopyable {
+class talk_to_svr : public std::enable_shared_from_this<talk_to_svr> {
 	typedef talk_to_svr self_type;
 	typedef Ogre::uint32 uint;
 
 	talk_to_svr(boost::asio::io_service& service, OgreConsole<myapp>*);
+	talk_to_svr(const talk_to_svr&) = delete;
 
 	void log(const std::string& msg, const boost::system::error_code& error);
 	void log(const std::string& msg, bool is_important = false);
@@ -132,7 +133,7 @@ private:
 	std::deque<std::vector<char>> m_IncomingMsgs;
 	std::deque<std::vector<char>> m_OutcomingMsgs;
 
-	boost::mutex m_Mutex;
+	std::mutex m_Mutex;
 
 	//std::map<int, std::string> m_Players;
 };

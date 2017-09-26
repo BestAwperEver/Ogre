@@ -214,7 +214,8 @@ void assert_me(bool condition, Ogre::String message) {
 #endif
 }
 
-myapp::myapp(): m_pRoot(0),
+myapp::myapp():
+	m_pRoot(0),
 	m_sPluginsCfg(Ogre::BLANKSTRING),
 	m_sResourcesCfg(Ogre::BLANKSTRING),
 #if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
@@ -285,17 +286,20 @@ myapp::myapp(): m_pRoot(0),
 	m_LightMapPixelPerTile(3)
 	//m_bForceFindPath(false)
 	//m_pObjectUnderMouseRay(nullptr)
-{}
+{
+}
 myapp::~myapp() {
 	//if (m_pStaticGeometry) {
 	//	delete m_pStaticGeometry;
 	//	m_pStaticGeometry = 0;
 	//} ибо сценманагер приберется
-	m_GroundTexturePtr.setNull();
-	m_DecalTexturePtr.setNull();
-	m_MapMaterialPtr.setNull();
-	m_LightMapTexturePtr.setNull();
-	m_DecalMaterialPtr.setNull();
+	
+	//m_GroundTexturePtr.setNull();
+	m_GroundTexturePtr.reset();
+	m_DecalTexturePtr.reset();
+	m_MapMaterialPtr.reset();
+	m_LightMapTexturePtr.reset();
+	m_DecalMaterialPtr.reset();
 
 	m_Maps[0] = "testmap";
 
@@ -388,16 +392,15 @@ myapp::~myapp() {
 	m_pRoot = 0;
 }
 
-bool myapp::setup() {
+bool myapp::setup_app() {
 
 	m_pRoot = new Ogre::Root(m_sPluginsCfg);
 
 	setupResources();
 
-	if (!configure()) {
-		return false;
-	}
+	if (!configure()) return false;
 
+	//addInputListener(this);
 	createRenderSystemListener();
 
 	chooseSceneManager();
@@ -405,9 +408,9 @@ bool myapp::setup() {
 	createCamera();
 #if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	createCompositor();
-#endif
+#else
 	createViewports();
-
+#endif
 	initGorilla();
 
 	initConsole();
@@ -434,9 +437,7 @@ bool myapp::setup() {
 	//// костыль мод он
 	//mRayScnQuery = mSceneMgr->createRayQuery(Ogre::Ray())
 	//// костыль мод офф
-
 	return true;
-
 }
 bool myapp::start() {
 
@@ -448,7 +449,7 @@ bool myapp::start() {
 	m_sResourcesCfg = "resources.cfg";
 #endif
 
-	if (!setup()) {
+	if (!setup_app()) {
 		return false;
 	}
 
@@ -468,8 +469,10 @@ bool myapp::start() {
 	//		return false;
 	//	}
 	//}
-
-	m_pRoot->startRendering();
+	if (m_pRoot->getRenderSystem() != NULL)
+	{
+		m_pRoot->startRendering();
+	}
 
 	return true;
 }
@@ -622,10 +625,10 @@ void myapp::createCompositor(void)
 #endif
 void myapp::createViewports(void)
 {
-	m_pViewport = m_pRenderWindow->addViewport();
-//	m_pViewport->setBackgroundColour(Ogre::ColourValue(0, 0, 0));
-
-//	m_pCamera->setAspectRatio(Ogre::Real(m_pViewport->getActualWidth()) / Ogre::Real(m_pViewport->getActualHeight()));
+	//m_pViewport = m_pRenderWindow->addViewport();
+	m_pViewport = m_pRenderWindow->addViewport(m_pCamera);
+	//m_pViewport->setBackgroundColour(Ogre::ColourValue(0, 0, 0));
+	//m_pCamera->setAspectRatio(Ogre::Real(m_pViewport->getActualWidth()) / Ogre::Real(m_pViewport->getActualHeight()));
 }
 void myapp::createFrameListener() {
 
@@ -643,9 +646,9 @@ void myapp::createFrameListener() {
 	m_pKeyboard = static_cast<OIS::Keyboard*>(m_pInputManager->createInputObject( OIS::OISKeyboard, true ));
 	m_pMouse = static_cast<OIS::Mouse*>(m_pInputManager->createInputObject( OIS::OISMouse, true ));
 
-	//Fix for 1.9
-	m_InputContext.mKeyboard = m_pKeyboard;
-	m_InputContext.mMouse = m_pMouse;
+	//Fix for 1.9 and 2.0?
+	//m_InputContext.mKeyboard = m_pKeyboard;
+	//m_InputContext.mMouse = m_pMouse;
 
 	m_pMouse->setEventCallback(this);
 	m_pKeyboard->setEventCallback(this);
@@ -662,9 +665,12 @@ void myapp::createFrameListener() {
 }
 void myapp::createOverlay() {
 
-	//Fix for 1.9
-	m_pTrayManager = new OgreBites::SdkTrayManager("InterfaceName", m_pRenderWindow, m_InputContext, this);
-	//m_pTrayManager = new OgreBites::SdkTrayManager("InterfaceName", m_pRenderWindow, m_pMouse, this);
+	//2.0?
+	//m_pTrayManager = new OgreBites::TrayManager("InterfaceName", m_pRenderWindow, m_InputContext, this);
+	//1.9?
+	//m_pTrayManager = new OgreBites::TrayManager("InterfaceName", m_pRenderWindow, m_pMouse, this);
+	//1.10?
+	m_pTrayManager = new OgreBites::TrayManager("InterfaceName", m_pRenderWindow, this);
 	m_pTrayManager->showFrameStats(OgreBites::TL_BOTTOMLEFT);
 	//m_pTrayManager->showLogo(OgreBites::TL_BOTTOMRIGHT);
 
@@ -822,7 +828,8 @@ void myapp::initConsole() {
 }
 
 void myapp::eventOccurred(const Ogre::String& eventName, const Ogre::NameValuePairList* parameters) {
-	if (!m_LightMapTexturePtr.isNull()) {
+	//if (!m_LightMapTexturePtr.isNull()) {
+	if (m_LightMapTexturePtr != nullptr) {
 		if (eventName == "DeviceRestored") {
 			redrawFOV(true);
 		}
@@ -902,7 +909,7 @@ void myapp::constructStaticMapObject(CellCoordinates Coordinates, MapObject& Obj
 
 	// Static geometry code
 	//Ogre::Entity* newEnt = m_pSceneManager->createEntity(
-	//	Obj.getName() + boost::to_string(m_Objects.size()),
+	//	Obj.getName() + std::to_string(m_Objects.size()),
 	//	mMesh);
 
 	//Obj.setEntity(newEnt);
@@ -945,7 +952,9 @@ void myapp::loadMap(Ogre::String MapName) {
 
 	Ogre::String MapPath = MapName + ".mapdef";
 
-	m_pGameMap = new GameMap(m_pMapBinManager->load(MapPath,"Maps").dynamicCast<MapBin>()->getArray());
+	//m_pGameMap = new GameMap(m_pMapBinManager->load(MapPath,"Maps").dynamicCast<MapBin>()->getArray());
+	m_pGameMap = new GameMap(std::dynamic_pointer_cast<MapBin>(m_pMapBinManager->load(MapPath, "Maps"))->getArray());
+	//std::dynamic_pointer_cast<MapBin>(new GameMap(m_pMapBinManager->load(MapPath, "Maps")))->getArray();
 
 	// при динамическом определении просто ничего не произойдёт
 	m_pGameMap->recalculateLightMaps(UNIT_MIN_VISIBILITY_RADIUS, UNIT_MAX_VISIBILITY_RADIUS);
@@ -997,8 +1006,8 @@ void myapp::loadMap(Ogre::String MapName) {
 
 	m_pStaticGeometry->build();
 
-	m_pMapBinManager->unload(MapPath);
-	m_pMapBinManager->remove(MapPath);
+	m_pMapBinManager->unload(MapPath, "Maps");
+	m_pMapBinManager->remove(MapPath, "Maps");
 
 	m_Path.reserve(31);
 	m_pPathLine->setVisible(true);
@@ -1080,7 +1089,8 @@ Ogre::TexturePtr myapp::createLightMapTexture() {
 		m_pGameMap->getHeight() * m_LightMapPixelPerTile,
 		0,					// number of mipmaps
 		Ogre::PF_BYTE_BGRA,
-		Ogre::TU_DYNAMIC_WRITE_ONLY_DISCARDABLE);	// usage; should be TU_DYNAMIC_WRITE_ONLY_DISCARDABLE for
+		//Ogre::TU_DYNAMIC_WRITE_ONLY_DISCARDABLE,
+		Ogre::TU_DEFAULT);	// usage; should be TU_DYNAMIC_WRITE_ONLY_DISCARDABLE for
 							// textures updated very often (e.g. each frame)
 
 	if (lightmapTexture->getFormat() != lightmapTexture->getDesiredFormat()) {
@@ -1310,23 +1320,24 @@ void myapp::createPlane() {
 	m_pTransparentGroundEntity = m_pSceneManager->createEntity(groundMesh);
 	m_pSceneManager->getRootSceneNode()->createChildSceneNode()->attachObject(m_pTransparentGroundEntity);
 
-	if (m_GroundTexturePtr.isNull()) {
+	//if (m_GroundTexturePtr.isNull()) {
+	if (m_GroundTexturePtr == nullptr) {
 		m_GroundTexturePtr = createGroundTexture();
 	}
 
-	if (m_LightMapTexturePtr.isNull()) {
+	if (m_LightMapTexturePtr == nullptr) {
 		m_LightMapTexturePtr = createLightMapTexture();
 	} else {
 		setRenderedLightMapDark();
 	}
 
-	if (m_MapMaterialPtr.isNull()) {
+	if (m_MapMaterialPtr == nullptr) {
 		m_MapMaterialPtr = createMapMaterial();
 		auto c = m_MapMaterialPtr->getTechnique(0)->getPass(0)->getDiffuse();
 		c.a = 0.5f;
 		m_MapMaterialPtr->getTechnique(0)->getPass(0)->setDiffuse(c);
 	}
-	if (m_DecalMaterialPtr.isNull()) {
+	if (m_DecalMaterialPtr == nullptr) {
 		m_DecalMaterialPtr = Ogre::MaterialManager::getSingleton().getByName("transparent", "General");
 	}
 
@@ -1444,9 +1455,13 @@ void myapp::createGrid() {
 		_LOG("Can't create grid: game map is not loaded");
 		return;
 	}
-
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	m_pGrid = new Ogre::ManualObject(Ogre::Id::generateNewId<Ogre::ManualObject>(),
 		&m_pSceneManager->_getEntityMemoryManager(Ogre::SCENE_STATIC));
+#else
+	m_pGrid = new Ogre::ManualObject("m_pGrid");
+#endif
+
 	m_pGrid->setCastShadows(false);
 	m_pGrid->estimateVertexCount(m_pGameMap->getHeight() * 2 + m_pGameMap->getWidth() * 2 + 4);
 
@@ -1494,9 +1509,14 @@ void myapp::createGrid() {
 
 	//m_pGrid->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
 	m_pGrid->setCastShadows(false);
+#if	OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	m_pGrid->setStatic(true);
-
+#endif
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	m_pSceneManager->getRootSceneNode()->createChildSceneNode(Ogre::SCENE_STATIC)->attachObject(m_pGrid);
+#else
+	m_pSceneManager->getRootSceneNode()->createChildSceneNode()->attachObject(m_pGrid);
+#endif
 
 	//matptr->unload();
 	//	Ogre::MaterialManager::getSingleton().remove("BaseColoured1");
@@ -1567,9 +1587,12 @@ void myapp::createScene() {
 	//												0,
 	//												PLANE_CENTER_Z + 800);
 	//	r->setAnimation("Idle");
-
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	m_pPathLine = new DynamicLines(&m_pSceneManager->_getEntityMemoryManager(Ogre::SCENE_DYNAMIC),
 									Ogre::RenderOperation::OT_LINE_STRIP);
+#else
+	m_pPathLine = new DynamicLines(Ogre::RenderOperation::OT_LINE_STRIP);
+#endif
 	m_pPathLine->setMaterial("BaseColoured1");
 	m_pPathLine->setCastShadows(false);
 
@@ -1806,7 +1829,7 @@ void myapp::enableUnimportantMsgs(Ogre::StringVector& vec) {
 		_LOG("unimportant_messages is set to " + Ogre::String(enable?"1":"0"));
 	}
 	else {
-		_LOG("unimportant_messages " + boost::to_string(Connection::getEnableUnimportantMessages()));
+		_LOG("unimportant_messages " + std::to_string(Connection::getEnableUnimportantMessages()));
 	}
 }
 void myapp::enableEmulatingPing(Ogre::StringVector& vec) {
@@ -2276,7 +2299,7 @@ void myapp::handle_thread() {
 	_OGRELOG("io_service stopped");
 }
 void myapp::forceRunService() {
-	boost::thread( boost::bind(&myapp::handle_thread, this) );
+	std::thread( std::bind(&myapp::handle_thread, this) );
 }
 myapp::sc_res myapp::start_connection(const std::string& IPv4, unsigned short port,
 	const Ogre::String& username) 
@@ -2310,7 +2333,7 @@ myapp::sc_res myapp::start_connection(const std::string& IPv4, unsigned short po
 	if (m_Service.stopped()) {
 		m_Service.reset();
 	}
-	boost::thread( boost::bind(&myapp::handle_thread, this) );
+	std::thread( std::bind(&myapp::handle_thread, this) );
 
 	do_RemoveAllUnits();
 	do_ClearPlayers();
@@ -2404,7 +2427,8 @@ bool myapp::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 
 	getInput();
 
-	//m_pTrayManager->frameRenderingQueued(evt);
+	// 1.10
+	m_pTrayManager->frameRendered(evt);
 
 	if (!m_pTrayManager->isDialogVisible())
 	{
@@ -2458,9 +2482,9 @@ bool myapp::frameRenderingQueued(const Ogre::FrameEvent& evt) {
 	return true;
 }
 void myapp::getInput() {
-	//m_pKeyboard->capture();
-	//m_pMouse->capture();
-	m_InputContext.capture();
+	m_pKeyboard->capture();
+	m_pMouse->capture();
+	//m_InputContext.capture();
 }
 bool myapp::keyPressed( const OIS::KeyEvent& arg ) {
 	if (m_pTrayManager->isDialogVisible()) return true;   // don't process any more keys if dialog is up
@@ -2631,12 +2655,24 @@ bool myapp::mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
 	//	m_pCameraMan->injectMouseUp(arg, id);
 	return true;
 }
+
 bool myapp::mouseMoved( const OIS::MouseEvent &arg )
 {
-#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
-	if (m_pTrayManager->injectPointerMove(arg)) return true; //2.0.0
+
+#if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
+	if (m_pTrayManager->injectPointerMove(arg)) {	//2.0
+	//if (m_pTrayManager->injectMouseMove(arg)) {		//1.9
+		return true;
+	}
 #else
-	if (m_pTrayManager->injectMouseMove(arg)) return true; //1.9.0
+	// HERE GOES COSTYL
+	OgreBites::MouseMotionEvent evt;
+	evt.x = arg.state.X.abs;
+	evt.y = arg.state.Y.abs;
+	if (m_pTrayManager->mouseMoved(evt)) {
+		return true;
+	}
+	// END OF COSTYL
 #endif
 	//CEGUI::System::getSingleton().getDefaultGUIContext().injectMouseMove(arg.state.X.rel, arg.state.Y.rel);
 
@@ -2651,6 +2687,17 @@ bool myapp::mouseMoved( const OIS::MouseEvent &arg )
 
 	return true;
 }
+
+//bool myapp::mouseMoved(const OgreBites::MouseMotionEvent& arg)
+//{
+//
+//	if (m_pTrayManager->mouseMoved(arg)) {
+//		return true;
+//	}
+//
+//	return true;
+//}
+
 void myapp::set_entity_under_mouse_ray_clear() {
 	//bool mMovableFound(false);
 
@@ -2687,7 +2734,11 @@ void myapp::set_entity_under_mouse_ray_clear() {
 	if (m_pCurPlayer->has_units()) {
 		unit_ray.setOrigin(m_pCamera->getPosition());
 		unit_ray.setDirection(
+#if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
 			m_pGameMap->getMyFirstUnit()->getEntity()->getWorldAabbUpdated().mCenter
+#else
+			m_pGameMap->getMyFirstUnit()->getEntity()->getWorldBoundingBox().getCenter()
+#endif
 			- m_pCamera->getPosition());
 	}
 	std::vector<CellCoordinates> ccs(8, CellCoordinates());
@@ -2695,14 +2746,17 @@ void myapp::set_entity_under_mouse_ray_clear() {
 
 
 	for (auto it = m_Objects.begin(); it != m_Objects.end(); ++it) {
+#if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
 		auto box = it->second.getEntity()->getWorldAabbUpdated();
-
 		// HERE GOES COSTYL
 		Ogre::AxisAlignedBox box2;
 		box2.setMaximum(box.getMaximum());
 		box2.setMinimum(box.getMinimum());
 		// END OF COSTYL
-
+#else
+		auto box = it->second.getEntity()->getWorldBoundingBox();
+		Ogre::AxisAlignedBox &box2 = box;
+#endif
 		//if (it->second.getMask().getM() == 1) {
 		//auto sphere = it->second.getEntity()->getWorldBoundingSphere();
 		//sphere.setRadius(sphere.getRadius()*0.3f);
@@ -3217,7 +3271,7 @@ void myapp::parse_CreateUnit(const std::vector<char>& msg, int& i) {
 	i += sizeof(short);
 	char cur_ap = msg[i++];
 	//do_CreateHero(Name, type_id, Class, Weapon, Armor, AP, HP, PlayerID, where, looks_to);
-	m_DoList.push( boost::bind( &myapp::do_CreateHero, this, name, ud, where, looks_to, cur_hp, cur_ap ) );
+	m_DoList.push( std::bind( &myapp::do_CreateHero, this, name, ud, where, looks_to, cur_hp, cur_ap ) );
 	//} else {
 	////UnitDef ud;
 	////ud.type_id = type_id;
@@ -3249,7 +3303,7 @@ void myapp::parse_CreateUnit(const std::vector<char>& msg, int& i) {
 	//CellCoordinates looks_to(msg[i], msg[i+1]);
 	//i += 2;
 	////do_CreateUnit(type_id, Class, Weapon, Armor, AP, HP, PlayerID, where, looks_to);
-	//m_DoList.push( boost::bind( &myapp::do_CreateUnit, this, ud, where, looks_to ) );
+	//m_DoList.push( std::bind( &myapp::do_CreateUnit, this, ud, where, looks_to ) );
 	//}
 }
 void myapp::parse_Shoot(const std::vector<char>& msg, int& i) {
@@ -3259,7 +3313,7 @@ void myapp::parse_Shoot(const std::vector<char>& msg, int& i) {
 		in_who = m_pGameMap->getUnit(in_who_c);
 	short dmg = *((short*)&msg[i+5]);
 
-	m_DoList.push( boost::bind( &myapp::do_Shoot, this, who, in_who, dmg ) );
+	m_DoList.push( std::bind( &myapp::do_Shoot, this, who, in_who, dmg ) );
 	//do_Shoot(who, in_who, dmg);
 
 	i += 7;
@@ -3279,7 +3333,7 @@ void myapp::parse_MoveUnit(const std::vector<char>& msg, int& i) {
 		m_Path[N - j - 1] = temp;
 	}
 	//do_MoveUnit(m_pGameMap->getUnit(robot), m_Path);
-	m_DoList.push( boost::bind( &myapp::do_MoveUnit, this, m_pGameMap->getUnit(who), m_Path ) );
+	m_DoList.push( std::bind( &myapp::do_MoveUnit, this, m_pGameMap->getUnit(who), m_Path ) );
 
 	i += N * 2;
 }
@@ -3288,7 +3342,7 @@ void myapp::parse_TurnBegin(const std::vector<char>& msg, int& i) {
 	i += sizeof(int);
 	if (m_CurrentActivePlayer == m_pCurPlayer->get_id()) {
 		//do_TurnBegin();
-		m_DoList.push( boost::bind( &myapp::do_TurnBegin, this ) );
+		m_DoList.push( std::bind( &myapp::do_TurnBegin, this ) );
 	} else {
 		blockActivity();
 		_LOG(get_nick(m_CurrentActivePlayer) + "\'s turn");
@@ -3299,7 +3353,7 @@ void myapp::parse_TurnEnd(const std::vector<char>& msg, int& i) {
 	i += sizeof(int);
 	if (player_id == m_pCurPlayer->get_id()) {
 		do_TurnEnd();
-		//m_DoList.push( boost::bind( &myapp::do_TurnEnd, this ) );
+		//m_DoList.push( std::bind( &myapp::do_TurnEnd, this ) );
 	} else {
 		_LOG("End of " + get_nick(player_id) + "\'s turn");
 	}
@@ -3310,10 +3364,10 @@ void myapp::parse_Set(const std::vector<char>& msg, int& i) {
 	char Property = msg[i++];
 	short Value = SHORT(msg[i]);
 	i += 2;
-	//boost::function< void() > method = boost::bind( &myapp::do_Set, this, m_pGameMap->getUnit(who), Property, Value );
+	//std::function< void() > method = std::bind( &myapp::do_Set, this, m_pGameMap->getUnit(who), Property, Value );
 	//do_Set(m_pGameMap->getUnit(who), Property, Value);
 	//method();
-	m_DoList.push( boost::bind( &myapp::do_Set, this, who, Property, Value ) );
+	m_DoList.push( std::bind( &myapp::do_Set, this, who, Property, Value ) );
 }
 void myapp::parse_NewPlayer(const std::vector<char>& msg, int& i) {
 	int player_id = INT(msg[i]);
@@ -3633,8 +3687,8 @@ bool myapp::req_Shoot(AbstractUnit* who_shoot, AbstractUnit* who_get_shooted) {
 
 	if (who_shoot->getAP() < _DATA.getShootCost(who_shoot->getWeapon())) {
 		_LOG("Can't use weapon: don't have enough active points (required: "
-			+ boost::to_string((short)_DATA.getShootCost(who_shoot->getWeapon())) + 
-			", you have: " + boost::to_string((short)who_shoot->getAP()) + ")");
+			+ std::to_string((short)_DATA.getShootCost(who_shoot->getWeapon())) + 
+			", you have: " + std::to_string((short)who_shoot->getAP()) + ")");
 		return false;
 	}
 
@@ -4041,7 +4095,7 @@ void myapp::do_Set(tile unit_coord, char Property, short Value) {
 #endif
 #ifdef ENABLE_GAME_LOG
 	_GAMELOG("do_Set " + unit->getName() + " " + unit->getCoordinates().to_readable_string() + " "
-		+ _DATA.getPropertyString(Property) + " " + boost::to_string(Value));
+		+ _DATA.getPropertyString(Property) + " " + std::to_string(Value));
 #endif
 	switch (Property) {
 	case static_cast<char>(PROPERTY::AP):
@@ -4097,8 +4151,8 @@ void myapp::do_MoveUnit(AbstractUnit* unit, std::vector<CellCoordinates> path) {
 //#ifdef ENABLE_GAME_LOG
 //	_GAMELOG("do_CreateUnit " + _DATA.getTypeString(type_id) + " " + _DATA.getClassString(Class) + " "
 //		+ _DATA.getWeaponString(Weapon) + " " + _DATA.getArmorString(Armor) + " AP "
-//		+ boost::to_string(short(AP)) + " HP " + boost::to_string(HP) + " " + where.to_readable_string()
-//		+ " PlayerID " + boost::to_string(short(player_id)) + " " + looks_to.to_readable_string());
+//		+ std::to_string(short(AP)) + " HP " + std::to_string(HP) + " " + where.to_readable_string()
+//		+ " PlayerID " + std::to_string(short(player_id)) + " " + looks_to.to_readable_string());
 //#endif
 //	//if (!scale) {
 //	//	scale = m_fDefaultRobotScale;
@@ -4143,8 +4197,8 @@ void myapp::do_MoveUnit(AbstractUnit* unit, std::vector<CellCoordinates> path) {
 //#ifdef ENABLE_GAME_LOG
 //	_GAMELOG("do_CreateUnit " + _DATA.getTypeString(ud.type_id) + " " + _DATA.getClassString(ud.Class) + " "
 //		+ _DATA.getWeaponString(ud.Weapon) + " " + _DATA.getArmorString(ud.Armor) + " AP "
-//		+ boost::to_string(short(ud.AP)) + " HP " + boost::to_string(ud.HP) + " " + where.to_readable_string()
-//		+ " PlayerID " + boost::to_string(ud.PlayerID) + " " + looks_to.to_readable_string());
+//		+ std::to_string(short(ud.AP)) + " HP " + std::to_string(ud.HP) + " " + where.to_readable_string()
+//		+ " PlayerID " + std::to_string(ud.PlayerID) + " " + looks_to.to_readable_string());
 //#endif
 //
 //	AbstractUnit::ptr r;
@@ -4171,7 +4225,7 @@ void myapp::do_CreateUnion(std::list<int> new_union)
 #ifdef ENABLE_GAME_LOG
 	Ogre::String msg("do_CreateUnion");
 	for (auto it = new_union.begin(); it != new_union.end(); ++it) {
-		msg += " " + boost::to_string(short(*it));
+		msg += " " + std::to_string(short(*it));
 	}
 	_GAMELOG(msg);
 #endif
@@ -4189,8 +4243,8 @@ void myapp::do_CreateUnion(std::list<int> new_union)
 //#ifdef ENABLE_GAME_LOG
 //	_GAMELOG("do_CreateHero " + Name + " " + _DATA.getTypeString(type_id) + " " + _DATA.getClassString(Class)
 //		+ " " + _DATA.getWeaponString(Weapon) + " " + _DATA.getArmorString(Armor) + " AP "
-//		+ boost::to_string(short(AP)) + " HP " + boost::to_string(HP) + " "
-//		+ where.to_readable_string() + " PlayerID " + boost::to_string(short(player_id)) + " "
+//		+ std::to_string(short(AP)) + " HP " + std::to_string(HP) + " "
+//		+ where.to_readable_string() + " PlayerID " + std::to_string(short(player_id)) + " "
 //		+ looks_to.to_readable_string());
 //#endif
 //	AbstractUnit::ptr r;
@@ -4214,8 +4268,8 @@ void myapp::do_CreateHero(const Ogre::String& Name, UnitDef ud, tile where, tile
 #ifdef ENABLE_GAME_LOG
 	_GAMELOG("do_CreateHero " + Name + " " + _DATA.getTypeString(ud.type_id) + " " + _DATA.getClassString(ud.Class)
 		+ " " + _DATA.getWeaponString(ud.Weapon) + " " + _DATA.getArmorString(ud.Armor) + " AP "
-		+ boost::to_string(short(ud.AP)) + " HP " + boost::to_string(ud.HP) + " "
-		+ where.to_readable_string() + " PlayerID " + boost::to_string(ud.PlayerID) + " "
+		+ std::to_string(short(ud.AP)) + " HP " + std::to_string(ud.HP) + " "
+		+ where.to_readable_string() + " PlayerID " + std::to_string(ud.PlayerID) + " "
 		+ looks_to.to_readable_string());
 #endif
 	AbstractUnit::ptr r;
@@ -4261,7 +4315,7 @@ void myapp::do_Shoot(AbstractUnit* who, AbstractUnit* in_who, short Damage) {
 		if (Damage < in_who->getHP()) {
 			in_who->getShooted(Damage);
 			_LOG(who->getName() + " shooted in " + in_who->getName() + ": "
-				+ boost::to_string(Damage) + " dmg, " + boost::to_string(in_who->getHP()) + " hp remaining");
+				+ std::to_string(Damage) + " dmg, " + std::to_string(in_who->getHP()) + " hp remaining");
 		} else {
 			if (in_who == m_pActiveUnit) {
 				deselectActiveUnit();
@@ -4277,12 +4331,12 @@ void myapp::do_Shoot(AbstractUnit* who, AbstractUnit* in_who, short Damage) {
 			in_who->getKilled(who);
 			redrawFOV();
 			_LOG(who->getName() + " have just killed " + in_who->getName() + ": "
-				+ boost::to_string(Damage) + " dmg");
+				+ std::to_string(Damage) + " dmg");
 			//do_RemoveUnit(in_who->getCoordinates());
 		}
 	} else {
 		_LOG(who->getName() + " shooted in " + in_who->getName() + ": missed, still "
-			+ boost::to_string(in_who->getHP()) + " hp");
+			+ std::to_string(in_who->getHP()) + " hp");
 	}
 	m_bNextDoing = true;
 }
@@ -4368,7 +4422,7 @@ void myapp::do_TurnBegin() {
 	//}
 	unblockActivity();
 	_LOG("Your turn");
-	m_DoList.push( boost::bind( &myapp::centerCamera, this, true ) );
+	m_DoList.push( std::bind( &myapp::centerCamera, this, true ) );
 	m_bNextDoing = true;
 }
 void myapp::do_DropFromLobby(int player_id) {
@@ -5061,7 +5115,7 @@ void myapp::undrawFOV(CellCoordinates cc) {
 
 void myapp::redrawFOV(bool full) {
 	
-	if (!m_pGameMap || m_LightMapTexturePtr.isNull()) {
+	if (!m_pGameMap || m_LightMapTexturePtr == nullptr) {
 		return;
 	}
 
@@ -5071,11 +5125,16 @@ void myapp::redrawFOV(bool full) {
 
 	if (m_pLightMap) {
 		m_pLightMap->clear();
+		// TO DO
 		m_pLightMap->estimateVertexCount(4 * 19 * 19 * 2); // числа надо сделать зависящими от радиуса обзора
 		m_pLightMap->estimateIndexCount(8 * 19 * 19 * 2);
 	} else {
+#if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
 		m_pLightMap = new Ogre::ManualObject(Ogre::Id::generateNewId<Ogre::ManualObject>(),
 			&m_pSceneManager->_getEntityMemoryManager(Ogre::SCENE_DYNAMIC));
+#else
+		m_pLightMap = new Ogre::ManualObject("LightMap");
+#endif
 		//m_pLightMap->setBoundingBox(Ogre::AxisAlignedBox::BOX_INFINITE);
 		m_pLightMap->estimateVertexCount(4 * 19 * 19 * 2);
 		m_pLightMap->estimateIndexCount(8 * 19 * 19 * 2);
@@ -5402,7 +5461,7 @@ Ogre::String myapp::get_nick(int player_id) {
 	if (player_id == -1) {
 		return "Neutral";
 	}
-	return m_Players[player_id].get_nick();// != "" ? m_Players[player_id] : boost::to_string(player_id);
+	return m_Players[player_id].get_nick();// != "" ? m_Players[player_id] : std::to_string(player_id);
 }
 void myapp::add_player(int player_id, const Ogre::String& Nick, bool log) {
 	//boost::mutex::scoped_lock lk(m_Mutex);
@@ -5423,6 +5482,8 @@ void myapp::add_player(int player_id, const Ogre::String& Nick, bool log) {
 }
 void myapp::add_player(int player_id, Ogre::String&& Nick, bool log) {
 	//boost::mutex::scoped_lock lk(m_Mutex);
+	//std::unique_lock<std::mutex> lock(m_Mutex);
+
 	auto it = m_Players.find(player_id);
 
 	if (it == m_Players.end()) {

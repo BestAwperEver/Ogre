@@ -5,9 +5,9 @@
 
 class MyOverlayManager: public Ogre::FrameListener
 {
-	OgreBites::SdkTrayManager*	m_pTrayManager;
+	OgreBites::TrayManager*	m_pTrayManager;
 public:
-	MyOverlayManager(OgreBites::SdkTrayManager*);
+	MyOverlayManager(OgreBites::TrayManager*);
 	~MyOverlayManager(void);
 
 	bool frameRenderingQueued(const Ogre::FrameEvent&);

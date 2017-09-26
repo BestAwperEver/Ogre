@@ -2,9 +2,9 @@
 #ifndef _Abstract_Unit_h_
 #define _Abstract_Unit_h_
 
-//#include "DataBase.h"
-#include "..\..\DataBase0\DataBase0\Vector3.h"
-#include "..\..\DataBase0\DataBase0\DataBase.h"
+#include "DataBase.h"
+//#include "..\..\DataBase0\DataBase0\Vector3.h"
+//#include "..\..\DataBase0\DataBase0\DataBase.h"
 #include "..\..\DataBase0\DataBase0\CellCoordinates.h"
 
 //class TerrainDecal;

@@ -14,9 +14,14 @@ class DynamicLines : public DynamicRenderable
 
 public:
 	/// Constructor - see setOperationType() for description of argument.
+#if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
 	DynamicLines (Ogre::ObjectMemoryManager*,
 		OperationType opType = Ogre::RenderOperation::OT_LINE_STRIP
 		, Ogre::String Material = "BaseWhiteNoLighting");
+#else
+	DynamicLines(OperationType opType = Ogre::RenderOperation::OT_LINE_STRIP
+		, Ogre::String Material = "BaseWhiteNoLighting");
+#endif
 	virtual ~DynamicLines();
 
 	/// Add a point to the point list

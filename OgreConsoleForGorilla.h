@@ -132,7 +132,7 @@ private:
 	std::map<Ogre::String, OgreConsoleMemberFunctionPtr>	commands;
 	std::map<Ogre::String, Ogre::String>					aliases;
 
-	boost::mutex m_Mutex;
+	std::mutex m_Mutex;
 
 public:
 
@@ -512,7 +512,7 @@ template<class callbackClass> void OgreConsole<callbackClass>::stopDeleting() {
 template<class callbackClass> void OgreConsole<callbackClass>::updateConsole()
 {
 
-	boost::mutex::scoped_lock lk(m_Mutex);
+	std::unique_lock<std::mutex> lk(m_Mutex);
 
 	mUpdateConsole = false;
 
@@ -586,7 +586,7 @@ template<class callbackClass> void OgreConsole<callbackClass>::print (const Ogre
 			line += str[c];
 	}
 
-	{ boost::mutex::scoped_lock lk(m_Mutex);
+	{ std::unique_lock<std::mutex> lk(m_Mutex);
 	if (line.length() )
 		lines.push_back (line);
 
@@ -629,7 +629,7 @@ template<class callbackClass> OgreConsole<callbackClass>& OgreConsole<callbackCl
 			line += str[c];
 	}
 
-	{ boost::mutex::scoped_lock lk(m_Mutex);
+	{ std::unique_lock<std::mutex> lk(m_Mutex);
 	if (this->lines.size() > m_nLineCount)
 		this->mStartline = this->lines.size() - m_nLineCount;
 	else

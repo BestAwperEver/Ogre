@@ -4,6 +4,7 @@
 #include <time.h>
 #include <iomanip>
 #include <queue>
+#include <OgreApplicationContext.h>
 #include "OgreConsoleForGorilla.h"
 #include "tcp_connection.h"
 #include "Player.h"
@@ -99,8 +100,10 @@ class myapp:
 	public Ogre::WindowEventListener, 
 	public Ogre::FrameListener,
 	public OIS::KeyListener, 
-	public OIS::MouseListener, 
-	public OgreBites::SdkTrayListener,
+	public OIS::MouseListener,
+//	public OgreBites::ApplicationContext,	//1.10?
+//	public OgreBites::InputListener,		//1.10?
+	public OgreBites::TrayListener,			//1.10?
 	public Ogre::RenderSystem::Listener
 {
 	typedef talk_to_svr Connection;
@@ -111,10 +114,10 @@ private: // объекты
 	Ogre::String				m_sResourcesCfg;
 	Ogre::RenderWindow*			m_pRenderWindow;
 #if OGRE_VERSION >= ((2 << 16) | (0 << 8) | 0)
-	Ogre::SceneManager*			m_pSceneManager;
+	Ogre::CompositorManager2*	m_pCompositorManager;
 #endif
 	Ogre::Viewport*				m_pViewport;
-	Ogre::CompositorManager2*	m_pCompositorManager;
+	Ogre::SceneManager*			m_pSceneManager;
 	Ogre::Camera*				m_pCamera;
 
 	//MapObject*					m_pObjectUnderMouseRay;
@@ -131,11 +134,12 @@ private: // объекты
 
 	GameMap*					m_pGameMap;
 
-	//Fix for 1.9:
-	OgreBites::InputContext		m_InputContext;
+#if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
+	OgreBites::InputContext		m_InputContext; //doesn't work with 1.10 and 2.1
+#endif
 	//bool						m_bCursorWasVisible;	// was cursor visible before dialog appeared
 
-	OgreBites::SdkTrayManager*	m_pTrayManager;
+	OgreBites::TrayManager*		m_pTrayManager;
 	OgreBites::ParamsPanel**	m_pParamsPanels;
 	int							m_nActivePanelIndex;
 
@@ -182,7 +186,7 @@ private: // клиент-серверная часть
 	// false в случае неверного сообщения
 	bool parseMsg();
 
-	std::queue<boost::function< void() >> m_DoList;
+	std::queue<std::function< void() >> m_DoList;
 
 	bool sendRequest(char command);
 	bool sendRequest(const std::vector<char>& msg);
@@ -201,7 +205,7 @@ private: // клиент-серверная часть
 	//bool m_bLogFileCreated;
 
 private: // инициализация и ввод
-	bool setup();
+	bool setup_app();
 	void setupResources();
 	bool configure();
 	void createRenderSystemListener();
@@ -242,8 +246,10 @@ private: // инициализация и ввод
 	bool keyPressed( const OIS::KeyEvent& );
 	bool keyReleased( const OIS::KeyEvent& );
 
+	//// OgreBites::InputListener
+	//bool mouseMoved(const OgreBites::MouseMotionEvent &evt) override;
 	// OIS::MouseListener
-	bool mouseMoved( const OIS::MouseEvent& );
+	bool mouseMoved( const OIS::MouseEvent& ) override;
 	bool mousePressed( const OIS::MouseEvent&, OIS::MouseButtonID );
 	bool mouseReleased( const OIS::MouseEvent&, OIS::MouseButtonID );
 
@@ -631,8 +637,8 @@ public:
 
 	myapp();
 	~myapp();
-
 	bool start();
+
 	//Player* get_player(int player_id);
 
 };

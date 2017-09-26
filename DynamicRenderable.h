@@ -8,7 +8,11 @@ class DynamicRenderable : public Ogre::SimpleRenderable
 {
 public:
 	/// Constructor
+#if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
 	DynamicRenderable(Ogre::ObjectMemoryManager*);
+#else
+	DynamicRenderable();
+#endif
 	/// Virtual destructor
 	virtual ~DynamicRenderable();
 

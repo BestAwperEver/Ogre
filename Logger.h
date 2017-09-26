@@ -13,7 +13,8 @@
 
 class Logger
 {
-	boost::mutex m_Mutex;
+	//boost::mutex m_Mutex;
+	std::mutex m_Mutex;
 
 	std::ofstream game_log_file;
 	bool m_bGameLogCreated;

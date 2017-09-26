@@ -5,6 +5,8 @@
 
 using namespace Ogre;
 
+#define MATERIAL_GROUP_NAME "General"
+
 /** An instance of a single material.
 * This class represents a single instance of a material. It's mainly 
 * an utility to allow a single Renderable to change its transparency without changing every 
