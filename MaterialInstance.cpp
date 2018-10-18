@@ -3,8 +3,9 @@
 MaterialInstance::MaterialInstance () {
 	mCurrentTransparency = 0.0f;
 
-	//mCopyMat.setNull ();
-	mCopyMat == nullptr;
+	//mCopyMat.setNull();
+	//mCopyMat = nullptr;
+	mCopyMat.reset();
 
 	mSBT = SBT_TRANSPARENT_ALPHA;
 }
@@ -106,5 +107,6 @@ void MaterialInstance::clearCopyMaterial () {
 	if (mCopyMat != nullptr)
 		MaterialManager::getSingleton ().remove (mCopyMat->getName (), MATERIAL_GROUP_NAME);
 
-	mCopyMat = nullptr;
+	//mCopyMat = nullptr;
+	mCopyMat.reset();
 }

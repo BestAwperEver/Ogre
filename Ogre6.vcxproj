@@ -1,0 +1,240 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Database0\Database0\CellCoordinates.h" />
+    <ClInclude Include="AbstractFactory.h" />
+    <ClInclude Include="AbstractUnit.h" />
+    <ClInclude Include="array2.h" />
+    <ClInclude Include="array2bool.h" />
+    <ClInclude Include="BaseMapObject.h" />
+    <ClInclude Include="DataBase.h" />
+    <ClInclude Include="DynamicLine3D.h" />
+    <ClInclude Include="DynamicRenderable.h" />
+    <ClInclude Include="EntityMaterialInstance.h" />
+    <ClInclude Include="FieldOfView.h" />
+    <ClInclude Include="GameMap.h" />
+    <ClInclude Include="Gorilla.h" />
+    <ClInclude Include="Hero.h" />
+    <ClInclude Include="HeroFactory.h" />
+    <ClInclude Include="LightMap.h" />
+    <ClInclude Include="Lobby.h" />
+    <ClInclude Include="Logger.h" />
+    <ClInclude Include="MapBin.h" />
+    <ClInclude Include="MapBinManager.h" />
+    <ClInclude Include="MapBinParser.h" />
+    <ClInclude Include="MapBinSerializer.h" />
+    <ClInclude Include="MapContainer.h" />
+    <ClInclude Include="MapObject.h" />
+    <ClInclude Include="MaterialInstance.h" />
+    <ClInclude Include="Merk.h" />
+    <ClInclude Include="myapp.h" />
+    <ClInclude Include="MyOverlayManager.h" />
+    <ClInclude Include="OgreConsoleForGorilla.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="PlayerCamera.h" />
+    <ClInclude Include="shared_enums.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="SubEntityMaterialInstance.h" />
+    <ClInclude Include="tcp_connection.h" />
+    <ClInclude Include="UnitDef.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Database0\Database0\CellCoordinates.cpp" />
+    <ClCompile Include="AbstractFactory.cpp" />
+    <ClCompile Include="AbstractUnit.cpp" />
+    <ClCompile Include="array2.cpp" />
+    <ClCompile Include="BaseMapObject.cpp" />
+    <ClCompile Include="DataBase.cpp" />
+    <ClCompile Include="DynamicLine3D.cpp" />
+    <ClCompile Include="DynamicRenderable.cpp" />
+    <ClCompile Include="EntityMaterialInstance.cpp" />
+    <ClCompile Include="FieldOfView.cpp" />
+    <ClCompile Include="GameMap.cpp" />
+    <ClCompile Include="Gorilla.cpp" />
+    <ClCompile Include="Hero.cpp" />
+    <ClCompile Include="HeroFactory.cpp" />
+    <ClCompile Include="LightMap.cpp" />
+    <ClCompile Include="Lobby.cpp" />
+    <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="MapBin.cpp" />
+    <ClCompile Include="MapBinManager.cpp" />
+    <ClCompile Include="MapBinParser.cpp" />
+    <ClCompile Include="MapBinSerializer.cpp" />
+    <ClCompile Include="MapContainer.cpp" />
+    <ClCompile Include="MapObject.cpp" />
+    <ClCompile Include="MaterialInstance.cpp" />
+    <ClCompile Include="Merk.cpp" />
+    <ClCompile Include="myapp.cpp" />
+    <ClCompile Include="MyOverlayManager.cpp" />
+    <ClCompile Include="OgreConsoleForGorilla.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="PlayerCamera.cpp" />
+    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="SubEntityMaterialInstance.cpp" />
+    <ClCompile Include="tcp_connection.cpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{6227f7a6-ac6b-4427-af6a-7934c37e6b4f}</ProjectGuid>
+    <RootNamespace>Ogre6</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.15063.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);$(BOOST_INCLUDEDIR);$(OGRE_HOME)\include;$(OGRE_HOME)\include\OIS;$(OGRE_HOME)\include\OGRE;$(OGRE_HOME)\include\SDL2;$(OGRE_HOME)\include\OGRE\RTShaderSystem;$(OGRE_HOME)\include\OGRE\Bites;$(OGRE_HOME)\include\OGRE\Overlay;$(OGRE_HOME)\include\OGRE\MeshLodGenerator</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <AdditionalOptions>/Zm500 %(AdditionalOptions)</AdditionalOptions>
+      <DisableSpecificWarnings>4251;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(OGRE_HOME)\lib;$(BOOST_ROOT)\stage\$(Platform)\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OgreBites_d.lib;OgreTerrain_d.lib;OgreMain_d.lib;OIS_d.lib;OgreOverlay_d.lib;OgreRTShaderSystem_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutDir)\$(TargetFileName)" "D:\MyApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);$(BOOST_INCLUDEDIR);$(OGRE_HOME)\include;$(OGRE_HOME)\include\OIS;$(OGRE_HOME)\include\OGRE;$(OGRE_HOME)\include\SDL2;$(OGRE_HOME)\include\OGRE\RTShaderSystem;$(OGRE_HOME)\include\OGRE\Bites;$(OGRE_HOME)\include\OGRE\Overlay;$(OGRE_HOME)\include\OGRE\MeshLodGenerator</AdditionalIncludeDirectories>
+      <AdditionalOptions>/Zm500 %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <DisableSpecificWarnings>4251;4996;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>OgreBites_d.lib;OgreTerrain_d.lib;OgreMain_d.lib;OIS_d.lib;OgreOverlay_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OGRE_HOME)\lib;$(BOOST_ROOT)\stage\$(Platform)\lib</AdditionalLibraryDirectories>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutDir)\$(TargetFileName)" "D:\MyApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);$(BOOST_INCLUDEDIR);$(OGRE_HOME)\include;$(OGRE_HOME)\include\OIS;$(OGRE_HOME)\include\OGRE;$(OGRE_HOME)\include\SDL2;$(OGRE_HOME)\include\OGRE\RTShaderSystem;$(OGRE_HOME)\include\OGRE\Bites;$(OGRE_HOME)\include\OGRE\Overlay;$(OGRE_HOME)\include\OGRE\MeshLodGenerator</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <AdditionalOptions>/Zm500 %(AdditionalOptions)</AdditionalOptions>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(OGRE_HOME)\lib;$(BOOST_ROOT)\stage\$(Platform)\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OgreBites.lib;OgreTerrain.lib;OgreMain.lib;OIS.lib;OgreOverlay.lib;OgreRTShaderSystem.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutDir)\$(TargetFileName)" "D:\MyApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(BOOST_ROOT);$(BOOST_INCLUDEDIR);$(OGRE_HOME)\include;$(OGRE_HOME)\include\OIS;$(OGRE_HOME)\include\OGRE;$(OGRE_HOME)\include\SDL2;$(OGRE_HOME)\include\OGRE\RTShaderSystem;$(OGRE_HOME)\include\OGRE\Bites;$(OGRE_HOME)\include\OGRE\Overlay;$(OGRE_HOME)\include\OGRE\MeshLodGenerator</AdditionalIncludeDirectories>
+      <AdditionalOptions>/Zm500 %(AdditionalOptions)</AdditionalOptions>
+      <ForcedIncludeFiles>stdafx.h</ForcedIncludeFiles>
+      <PrecompiledHeader>Create</PrecompiledHeader>
+      <DisableSpecificWarnings>
+      </DisableSpecificWarnings>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>$(OGRE_HOME)\lib;$(BOOST_ROOT)\stage\$(Platform)\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OgreBites.lib;OgreTerrain.lib;OgreMain.lib;OIS.lib;OgreOverlay.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy "$(OutDir)\$(TargetFileName)" "D:\MyApp\bin\$(Platform)\$(Configuration)\$(TargetFileName)"</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -18,7 +18,7 @@ DynamicLines::DynamicLines(OperationType opType, Ogre::String material)
 #endif
 {
 	initialize (opType, false);
-	setMaterial (material);
+	setMaterial (Ogre::MaterialManager::getSingleton().getByName(material));
 	mDirty = true;
 }
 

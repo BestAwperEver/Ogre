@@ -18,6 +18,9 @@
 #include <mutex>
 #include <thread>
 #include <memory>
+#include <time.h>
+#include <iomanip>
+#include <queue>
 
 //#include <boost/thread.hpp>
 //#include <boost/bind.hpp>
@@ -45,6 +48,15 @@
 #include <OgreInput.h>
 //#include <OgreMeshLodGenerator.h>
 #include <OIS.h>
+#include <OgreNode.h>
+#include <OgreMovableObject.h>
+#include <OgreInstancedEntity.h>
+#include <OgreInstanceManager.h>
+#include <OgreCameraMan.h>
+#include <OgreShaderGenerator.h>
+#include <OgreApplicationContext.h>
+#include <OgreBitesConfigDialog.h>
+#include <OgreRTShaderSystem.h>
 
 #if OGRE_VERSION >= ((1 << 16) | (9 << 8) | 0)
 #include <Overlay/OgreOverlaySystem.h>

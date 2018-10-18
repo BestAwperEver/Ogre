@@ -18,6 +18,7 @@ public:
 	DynamicLines (Ogre::ObjectMemoryManager*,
 		OperationType opType = Ogre::RenderOperation::OT_LINE_STRIP
 		, Ogre::String Material = "BaseWhiteNoLighting");
+	DynamicLines(OperationType opType, Ogre::MaterialPtr material);
 #else
 	DynamicLines(OperationType opType = Ogre::RenderOperation::OT_LINE_STRIP
 		, Ogre::String Material = "BaseWhiteNoLighting");

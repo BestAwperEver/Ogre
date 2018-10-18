@@ -1,16 +1,11 @@
 #ifndef _myapp_h_
 #define _myapp_h_
 
-#include <time.h>
-#include <iomanip>
-#include <queue>
-#include <OgreApplicationContext.h>
 #include "OgreConsoleForGorilla.h"
 #include "tcp_connection.h"
 #include "Player.h"
 #include "Lobby.h"
 #include "array2.h"
-#include "PathLine.h"
 
 class SelectionBox;
 class PlayerCamera;

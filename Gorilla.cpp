@@ -853,7 +853,8 @@ namespace Gorilla
 	{
 		OGRE_DELETE mRenderOpPtr->vertexData;
 		mRenderOpPtr->vertexData = 0;
-		mVertexBuffer = nullptr;
+		//mVertexBuffer = nullptr;
+		mVertexBuffer.reset();
 		mVertexBufferSize = 0;
 	}
 
@@ -1149,7 +1150,8 @@ namespace Gorilla
 	{
 		mRenderOpPtr = &mRenderOp;
 		mBox.setInfinite();
-		setMaterial(mAtlas->get3DMaterialName());
+		std::string materialName = mAtlas->get3DMaterialName();
+		setMaterial(Ogre::MaterialManager::getSingleton().getByName(materialName));
 
 		_createVertexBuffer();
 	}

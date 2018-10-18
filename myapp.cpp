@@ -439,6 +439,7 @@ bool myapp::setup_app() {
 	//// костыль мод офф
 	return true;
 }
+
 bool myapp::start() {
 
 #ifdef _DEBUG
@@ -476,6 +477,7 @@ bool myapp::start() {
 
 	return true;
 }
+
 void myapp::setupResources() {
 
 	m_pMapBinManager = new MapBinManager();
@@ -501,8 +503,9 @@ void myapp::setupResources() {
 		}
 	}
 }
+
 bool myapp::configure() {
-	if (m_pRoot->restoreConfig() || m_pRoot->showConfigDialog()) {
+	if (m_pRoot->restoreConfig() || m_pRoot->showConfigDialog(OgreBites::getNativeConfigDialog())) {
 
 		/*
 		You can use Root::getAvailableRenderers() to find out which RenderSystems are available for your application to use. 
@@ -546,8 +549,11 @@ void myapp::chooseSceneManager() {
 	if (numThreads > 1) Ogre::InstancingThreadedCullingMethod threadedCullingMethod = Ogre::INSTANCING_CULLING_THREADED;
 	m_pSceneManager = Ogre::Root::getSingleton().createSceneManager(Ogre::ST_GENERIC, numThreads, threadedCullingMethod);
 #else
-	m_pSceneManager = m_pRoot->createSceneManager(Ogre::ST_GENERIC);
+	m_pSceneManager = m_pRoot->createSceneManager();
 #endif
+	Ogre::RTShader::ShaderGenerator* shadergen = Ogre::RTShader::ShaderGenerator::getSingletonPtr();
+	shadergen->addSceneManager(m_pSceneManager);
+
 	m_pOverlaySystem = new Ogre::OverlaySystem();
 	m_pSceneManager->addRenderQueueListener(m_pOverlaySystem);
 }
@@ -1385,8 +1391,8 @@ void myapp::createLights() {
 
 	m_pSceneManager->setAmbientLight(Ogre::ColourValue(0.6f, 0.6f, 0.6f));
 
-	m_pSceneManager->setShadowDirectionalLightExtrusionDistance( 1500.0f );
-	m_pSceneManager->setShadowFarDistance( 1500.0f );
+	m_pSceneManager->setShadowDirectionalLightExtrusionDistance( 10000.0f );
+	m_pSceneManager->setShadowFarDistance( 10000.0f );
 
 	//Ogre::Light* l = m_pSceneManager->createLight("pointLight");
 	//l->setDiffuseColour(Ogre::ColourValue(0.9f,0.9f,0.9f));
@@ -1417,8 +1423,23 @@ void myapp::createLights() {
 	directionalLight->setSpecularColour(Ogre::ColourValue(.9f, .9f, .9f));
 	directionalLight->setDirection(Ogre::Vector3( 0.6f, -1.5f, -1.0f ));
 
-	//m_pSceneManager->setShadowTechnique(Ogre::ShadowTechnique::SHADOWTYPE_TEXTURE_MODULATIVE);
 	//m_pSceneManager->setShadowTechnique(Ogre::ShadowTechnique::SHADOWTYPE_TEXTURE_ADDITIVE);
+	//m_pSceneManager->setShadowTechnique(Ogre::ShadowTechnique::SHADOWTYPE_TEXTURE_MODULATIVE);
+	//m_pSceneManager->setShadowTechnique(Ogre::ShadowTechnique::SHADOWTYPE_STENCIL_MODULATIVE);
+	m_pSceneManager->setShadowTechnique(Ogre::ShadowTechnique::SHADOWTYPE_STENCIL_ADDITIVE);
+
+	//mLiSPSMSetup = new LiSPSMShadowCameraSetup();
+	//mLiSPSMSetup->setUseAggressiveFocusRegion(false);
+	//mCurrentShadowCameraSetup = ShadowCameraSetupPtr(mLiSPSMSetup);
+
+	//auto asd = new Ogre::FocusedShadowCameraSetup();
+	//asd->setUseAggressiveFocusRegion(true);
+
+	//m_pSceneManager->setShadowTextureSelfShadow(true);
+
+	//m_pSceneManager->setShadowCameraSetup(
+	//	//		Ogre::ShadowCameraSetupPtr(new Ogre::LiSPSMShadowCameraSetup()));
+	//	Ogre::ShadowCameraSetupPtr(asd));
 
 	//directionalLight->setDiffuseColour(Ogre::ColourValue::White);
 	//directionalLight->setSpecularColour(Ogre::ColourValue::Blue);
@@ -1593,7 +1614,7 @@ void myapp::createScene() {
 #else
 	m_pPathLine = new DynamicLines(Ogre::RenderOperation::OT_LINE_STRIP);
 #endif
-	m_pPathLine->setMaterial("BaseColoured1");
+	m_pPathLine->setMaterial(Ogre::MaterialManager::getSingleton().getByName("BaseColoured1", "General"));
 	m_pPathLine->setCastShadows(false);
 
 	m_pPathLineNode = m_pSceneManager->getRootSceneNode()->createChildSceneNode();
@@ -2750,7 +2771,8 @@ void myapp::set_entity_under_mouse_ray_clear() {
 #if OGRE_VERSION == ((2 << 16) | (0 << 8) | 0)
 			m_pGameMap->getMyFirstUnit()->getEntity()->getWorldAabbUpdated().mCenter
 #else
-			m_pGameMap->getMyFirstUnit()->getEntity()->getWorldBoundingBox().getCenter()
+			m_pGameMap->getMyFirstUnit()->getPosition()
+			//m_pGameMap->getMyFirstUnit()->getEntity()->getWorldBoundingBox().getCenter()
 #endif
 			- m_pCamera->getPosition());
 	}
